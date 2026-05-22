@@ -9,6 +9,8 @@ use App\Models\Pengerjaan;
 use App\Models\JenisProduk;
 use App\Models\Satuan;
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class WoundReportController extends Controller
 {
@@ -339,6 +341,213 @@ class WoundReportController extends Controller
                 'pin' => $pin,
                 'expires_at' => now()->addMinutes(20)->format('H:i')
             ]);
+    }
+
+    public function export(Request $request)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors('Hanya koordinator yang dapat mengekspor laporan.');
+        }
+
+        $query = WoundReport::query();
+
+        // 1. Filter based on filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+        if ($request->filled('operator_filter')) {
+            $query->where('operator_id', $request->input('operator_filter'));
+        }
+
+        // 2. Search filter
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('produk_yang_dikerjakan', 'like', "%{$search}%")
+                  ->orWhere('pengerjaan', 'like', "%{$search}%")
+                  ->orWhere('jenis_produk', 'like', "%{$search}%")
+                  ->orWhere('vendor', 'like', "%{$search}%")
+                  ->orWhere('operator', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+            });
+        }
+
+        // Eager load operatorRelation to retrieve Google emails quickly
+        $reports = $query->with('operatorRelation')->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc')->get();
+
+        $format = $request->input('format', 'excel');
+
+        // Layout matching previous Google Sheet template (Keterangan first, then Status)
+        $columns = [
+            'Timestamp',
+            'Email Address',
+            'Tanggal',
+            'Shift',
+            'Nama',
+            'Vendor',
+            'Pengerjaan',
+            'Jenis Produk',
+            'Produk yang Dikerjakan',
+            'Hasil',
+            'Satuan',
+            'Keterangan',
+            'Status'
+        ];
+
+        if ($format === 'csv') {
+            $filename = "laporan_woundcare_" . date('Ymd_His') . ".csv";
+            
+            $headers = [
+                "Content-type"        => "text/csv; charset=UTF-8",
+                "Content-Disposition" => "attachment; filename=$filename",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use($reports, $columns) {
+                $file = fopen('php://output', 'w');
+                
+                // Add UTF-8 BOM for proper Excel encoding on Windows
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, $columns, ';'); // Semicolon is best for Excel regional settings in Indonesia
+
+                foreach ($reports as $report) {
+                    $email = $report->operatorRelation ? $report->operatorRelation->email : '';
+                    fputcsv($file, [
+                        $report->created_at->format('d/m/Y H:i:s'),
+                        $email,
+                        \Carbon\Carbon::parse($report->tanggal)->format('d/m/Y'),
+                        $report->shift,
+                        $report->operator,
+                        $report->vendor,
+                        $report->pengerjaan,
+                        $report->jenis_produk,
+                        $report->produk_yang_dikerjakan,
+                        $report->hasil,
+                        $report->satuan,
+                        $report->keterangan,
+                        ucfirst($report->status)
+                    ], ';');
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } else {
+            // Excel Export using PhpSpreadsheet
+            $spreadsheet = new Spreadsheet();
+            
+            $colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+            
+            // Indonesian month names mapping
+            $months = [
+                1 => 'JANUARI', 2 => 'FEBRUARI', 3 => 'MARET', 4 => 'APRIL',
+                5 => 'MEI', 6 => 'JUNI', 7 => 'JULI', 8 => 'AGUSTUS',
+                9 => 'SEPTEMBER', 10 => 'OKTOBER', 11 => 'NOVEMBER', 12 => 'DESEMBER'
+            ];
+            
+            // Group reports by month name and year based on the work date
+            $grouped = $reports->groupBy(function($report) use ($months) {
+                $date = \Carbon\Carbon::parse($report->tanggal);
+                return $months[$date->month] . ' ' . $date->year;
+            });
+            
+            if ($grouped->isEmpty()) {
+                // Default empty state
+                $sheet = $spreadsheet->getActiveSheet();
+                $sheet->setTitle('Laporan');
+                
+                // Write header
+                foreach ($columns as $colIndex => $colName) {
+                    $sheet->setCellValue($colLetters[$colIndex] . '1', $colName);
+                }
+                
+                // Style header
+                $headerRange = 'A1:M1';
+                $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+                $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF4C1F7A');
+                
+                foreach ($colLetters as $letter) {
+                    $sheet->getColumnDimension($letter)->setAutoSize(true);
+                }
+            } else {
+                $sheetIndex = 0;
+                foreach ($grouped as $monthYear => $monthReports) {
+                    if ($sheetIndex === 0) {
+                        $sheet = $spreadsheet->getActiveSheet();
+                    } else {
+                        $sheet = $spreadsheet->createSheet();
+                    }
+                    
+                    // Set title (max 31 characters, and replace any invalid characters if any)
+                    $sheet->setTitle(substr($monthYear, 0, 31));
+                    
+                    // Write header
+                    foreach ($columns as $colIndex => $colName) {
+                        $sheet->setCellValue($colLetters[$colIndex] . '1', $colName);
+                    }
+                    
+                    // Write data
+                    $row = 2;
+                    foreach ($monthReports as $report) {
+                        $email = $report->operatorRelation ? $report->operatorRelation->email : '';
+                        
+                        $sheet->setCellValue('A' . $row, $report->created_at->format('d/m/Y H:i:s'));
+                        $sheet->setCellValue('B' . $row, $email);
+                        $sheet->setCellValue('C' . $row, \Carbon\Carbon::parse($report->tanggal)->format('d/m/Y'));
+                        $sheet->setCellValue('D' . $row, $report->shift);
+                        $sheet->setCellValue('E' . $row, $report->operator);
+                        $sheet->setCellValue('F' . $row, $report->vendor);
+                        $sheet->setCellValue('G' . $row, $report->pengerjaan);
+                        $sheet->setCellValue('H' . $row, $report->jenis_produk);
+                        $sheet->setCellValue('I' . $row, $report->produk_yang_dikerjakan);
+                        // Cast to numeric for Excel calculations
+                        $sheet->setCellValueExplicit('J' . $row, (int)$report->hasil, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
+                        $sheet->setCellValue('K' . $row, $report->satuan);
+                        $sheet->setCellValue('L' . $row, $report->keterangan);
+                        $sheet->setCellValue('M' . $row, ucfirst($report->status));
+                        $row++;
+                    }
+                    
+                    // Auto size columns for beautiful presentation
+                    foreach ($colLetters as $letter) {
+                        $sheet->getColumnDimension($letter)->setAutoSize(true);
+                    }
+                    
+                    // Style the header row (Solid Dark Purple Hex #4C1F7A background with White bold text)
+                    $headerRange = 'A1:M1';
+                    $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+                    $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF4C1F7A');
+                    
+                    // Apply thin borders and grid gridlines
+                    if ($row > 2) {
+                        $sheet->getStyle('A1:M' . ($row - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setARGB('FFD3D3D3');
+                        
+                        // Format volume column (Hasil) with thousands separator
+                        $sheet->getStyle('J2:J' . ($row - 1))->getNumberFormat()->setFormatCode('#,##0');
+                    }
+                    
+                    $sheetIndex++;
+                }
+            }
+            
+            // Set the first sheet (newest month) as the active one
+            $spreadsheet->setActiveSheetIndex(0);
+            
+            // Output as download
+            $filename = "laporan_woundcare_" . date('Ymd_His') . ".xlsx";
+            
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . urlencode($filename) . '"');
+            header('Cache-Control: max-age=0');
+            
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+            exit;
+        }
     }
 
     public function updateMyWhatsapp(Request $request)

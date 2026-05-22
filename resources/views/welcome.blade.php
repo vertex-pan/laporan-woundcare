@@ -307,6 +307,28 @@
                         </a>
                     </div>
                 </form>
+
+                <!-- Export Options Row -->
+                <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <span class="text-2xs font-bold text-slate-450 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="file-output" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Ekspor Laporan (Sesuai Filter Pencarian Aktif)
+                    </span>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <!-- CSV Download -->
+                        <a href="{{ route('wound-reports.export', array_merge(request()->query(), ['format' => 'csv'])) }}" 
+                           class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 border border-slate-200">
+                            <i data-lucide="file-text" class="w-4 h-4 text-amber-600"></i>
+                            <span>Unduh CSV</span>
+                        </a>
+                        <!-- Excel Download -->
+                        <a href="{{ route('wound-reports.export', array_merge(request()->query(), ['format' => 'excel'])) }}" 
+                           class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md active:scale-95 border border-emerald-500">
+                            <i data-lucide="sheet" class="w-4 h-4 text-white"></i>
+                            <span>Unduh Excel</span>
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Verification Queue List -->

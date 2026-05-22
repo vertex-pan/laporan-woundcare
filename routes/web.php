@@ -22,6 +22,7 @@ Route::post('/login/setup-profile', [AuthController::class, 'saveSetupProfile'])
 // Protected Routes
 Route::middleware(['operator.auth'])->group(function () {
     Route::get('/', [WoundReportController::class, 'index'])->name('dashboard');
+    Route::get('/wound-reports/export', [WoundReportController::class, 'export'])->name('wound-reports.export');
     Route::post('/wound-reports', [WoundReportController::class, 'store'])->name('wound-reports.store');
     Route::delete('/wound-reports/{id}', [WoundReportController::class, 'destroy'])->name('wound-reports.destroy');
     
