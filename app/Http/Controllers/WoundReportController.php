@@ -377,6 +377,17 @@ class WoundReportController extends Controller
 
         $format = $request->input('format', 'excel');
 
+        // Create beautiful Indonesian date string for file name
+        $monthsIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $currentDay = date('j');
+        $currentMonth = $monthsIndo[(int)date('n')];
+        $currentYear = date('Y');
+        $dateString = "{$currentDay} {$currentMonth} {$currentYear}";
+
         // Layout matching previous Google Sheet template (Keterangan first, then Status)
         $columns = [
             'Timestamp',
@@ -395,11 +406,11 @@ class WoundReportController extends Controller
         ];
 
         if ($format === 'csv') {
-            $filename = "laporan_woundcare_" . date('Ymd_His') . ".csv";
+            $filename = "Laporan Produksi Woundcare - FILTERED - {$dateString}.csv";
             
             $headers = [
                 "Content-type"        => "text/csv; charset=UTF-8",
-                "Content-Disposition" => "attachment; filename=$filename",
+                "Content-Disposition" => "attachment; filename=\"{$filename}\"",
                 "Pragma"              => "no-cache",
                 "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
                 "Expires"             => "0"
@@ -648,10 +659,10 @@ class WoundReportController extends Controller
             $spreadsheet->setActiveSheetIndex(0);
             
             // Output as download
-            $filename = "laporan_woundcare_" . date('Ymd_His') . ".xlsx";
+            $filename = "Laporan Produksi Woundcare - LENGKAP - {$dateString}.xlsx";
             
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment; filename="' . urlencode($filename) . '"');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Cache-Control: max-age=0');
             
             $writer = new Xlsx($spreadsheet);
