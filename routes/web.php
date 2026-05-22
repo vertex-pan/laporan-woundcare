@@ -36,5 +36,7 @@ Route::middleware(['operator.auth'])->group(function () {
     Route::put('/operators/{id}', [WoundReportController::class, 'updateOperator'])->name('operators.update');
     Route::delete('/operators/{id}', [WoundReportController::class, 'destroyOperator'])->name('operators.destroy');
     Route::post('/operators/{id}/generate-pin', [WoundReportController::class, 'generateEmergencyPin'])->name('operators.generate-pin');
+    Route::post('/operators/{id}/dismiss-emergency-pin', [WoundReportController::class, 'dismissEmergencyPin'])->name('operators.dismiss-emergency-pin');
     Route::post('/operators/{id}/generate-late-pin', [WoundReportController::class, 'generateLatePin'])->name('operators.generate-late-pin');
+    Route::post('/operators/{id}/dismiss-late-pin', [WoundReportController::class, 'dismissLatePin'])->name('operators.dismiss-late-pin');
 });

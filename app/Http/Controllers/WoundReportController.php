@@ -74,7 +74,36 @@ class WoundReportController extends Controller
             })
             ->toArray();
 
-        return view('welcome', compact('reports', 'pengerjaans', 'jenisProduks', 'satuans', 'allOperators', 'shiftWindows', 'submittedKeys'));
+        // Fetch active late PINs for Coordinator display (persists on refresh, disappears on use/close)
+        $activeLatePins = [];
+        $activeEmergencyPins = [];
+        if ($role === 'coordinator') {
+            foreach ($allOperators as $op) {
+                // Late PINs
+                $metaLate = \Illuminate\Support\Facades\Cache::get('late_pin_meta_' . $op->id);
+                if ($metaLate) {
+                    if (now('Asia/Jakarta')->timestamp < $metaLate['expires_timestamp']) {
+                        $activeLatePins[$op->id] = $metaLate;
+                    } else {
+                        \Illuminate\Support\Facades\Cache::forget('late_pin_meta_' . $op->id);
+                        \Illuminate\Support\Facades\Cache::forget('late_pin_' . $op->id);
+                    }
+                }
+
+                // Emergency PINs (Forgot Phone)
+                $metaEmergency = \Illuminate\Support\Facades\Cache::get('emergency_pin_meta_' . $op->id);
+                if ($metaEmergency) {
+                    if (now('Asia/Jakarta')->timestamp < $metaEmergency['expires_timestamp']) {
+                        $activeEmergencyPins[$op->id] = $metaEmergency;
+                    } else {
+                        \Illuminate\Support\Facades\Cache::forget('emergency_pin_meta_' . $op->id);
+                        \Illuminate\Support\Facades\Cache::forget('emergency_pin_' . $op->id);
+                    }
+                }
+            }
+        }
+
+        return view('welcome', compact('reports', 'pengerjaans', 'jenisProduks', 'satuans', 'allOperators', 'shiftWindows', 'submittedKeys', 'activeLatePins', 'activeEmergencyPins'));
     }
 
     public function store(Request $request)
@@ -182,6 +211,7 @@ class WoundReportController extends Controller
             
             if ($isLateSubmission) {
                 \Illuminate\Support\Facades\Cache::forget('late_pin_' . session('operator_id'));
+                \Illuminate\Support\Facades\Cache::forget('late_pin_meta_' . session('operator_id'));
             }
             return redirect()->route('dashboard')->with('success', 'Laporan berhasil diperbarui.');
         }
@@ -190,6 +220,7 @@ class WoundReportController extends Controller
 
         if ($isLateSubmission) {
             \Illuminate\Support\Facades\Cache::forget('late_pin_' . session('operator_id'));
+            \Illuminate\Support\Facades\Cache::forget('late_pin_meta_' . session('operator_id'));
         }
 
         return redirect()->route('dashboard')->with('success', $isLateSubmission ? 'Laporan keterlambatan berhasil diajukan. Menunggu persetujuan khusus Koordinator.' : 'Laporan pengerjaan berhasil diajukan. Menunggu persetujuan Koordinator.');
@@ -358,17 +389,34 @@ class WoundReportController extends Controller
         
         // Generate a 6-digit random PIN
         $pin = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = now('Asia/Jakarta')->addMinutes(20);
 
         // Store in cache for 20 minutes
-        \Illuminate\Support\Facades\Cache::put('emergency_pin_' . $operator->id, $pin, now()->addMinutes(20));
+        \Illuminate\Support\Facades\Cache::put('emergency_pin_' . $operator->id, $pin, $expiresAt);
 
-        return redirect()->back()->with('success', "PIN Darurat berhasil dibuat.")
-            ->with('emergency_pin_generated', [
-                'operator_id' => $operator->id,
-                'operator_name' => $operator->name,
-                'pin' => $pin,
-                'expires_at' => now()->addMinutes(20)->format('H:i')
-            ]);
+        // Store metadata in cache for Coordinator display toast
+        $metaData = [
+            'operator_id' => $operator->id,
+            'operator_name' => $operator->name,
+            'pin' => $pin,
+            'expires_at' => $expiresAt->format('H:i'),
+            'expires_timestamp' => $expiresAt->timestamp
+        ];
+        \Illuminate\Support\Facades\Cache::put('emergency_pin_meta_' . $operator->id, $metaData, $expiresAt);
+
+        return redirect()->back()->with('success', "PIN Darurat (Lupa HP) berhasil dibuat untuk {$operator->name}.");
+    }
+
+    public function dismissEmergencyPin($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('emergency_pin_' . $id);
+        \Illuminate\Support\Facades\Cache::forget('emergency_pin_meta_' . $id);
+
+        return redirect()->back()->with('success', 'PIN Darurat (Lupa HP) berhasil ditutup.');
     }
 
     public function generateLatePin($id)
@@ -381,17 +429,34 @@ class WoundReportController extends Controller
         
         // Generate a 6-digit random PIN
         $pin = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = now('Asia/Jakarta')->addMinutes(60);
 
         // Store in cache for 60 minutes (1 hour)
-        \Illuminate\Support\Facades\Cache::put('late_pin_' . $operator->id, $pin, now()->addMinutes(60));
+        \Illuminate\Support\Facades\Cache::put('late_pin_' . $operator->id, $pin, $expiresAt);
 
-        return redirect()->back()->with('success', "PIN Keterlambatan berhasil dibuat untuk {$operator->name}.")
-            ->with('late_pin_generated', [
-                'operator_id' => $operator->id,
-                'operator_name' => $operator->name,
-                'pin' => $pin,
-                'expires_at' => now()->addMinutes(60)->format('H:i')
-            ]);
+        // Store metadata in cache for Coordinator display toast
+        $metaData = [
+            'operator_id' => $operator->id,
+            'operator_name' => $operator->name,
+            'pin' => $pin,
+            'expires_at' => $expiresAt->format('H:i'),
+            'expires_timestamp' => $expiresAt->timestamp
+        ];
+        \Illuminate\Support\Facades\Cache::put('late_pin_meta_' . $operator->id, $metaData, $expiresAt);
+
+        return redirect()->back()->with('success', "PIN Keterlambatan berhasil dibuat untuk {$operator->name}.");
+    }
+
+    public function dismissLatePin($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('late_pin_' . $id);
+        \Illuminate\Support\Facades\Cache::forget('late_pin_meta_' . $id);
+
+        return redirect()->back()->with('success', 'PIN Keterlambatan berhasil ditutup.');
     }
 
     public function export(Request $request)

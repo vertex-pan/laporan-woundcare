@@ -148,21 +148,21 @@
         </div>
         @endif
         
-        <!-- Notifications / Toasts -->
-        @if(session('emergency_pin_generated'))
-        @php $generated = session('emergency_pin_generated'); @endphp
-        <div id="emergencyPinToast" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- Persistent Emergency PIN Generated Toasts (Cache-backed) -->
+        @if(isset($activeEmergencyPins) && count($activeEmergencyPins) > 0)
+        @foreach($activeEmergencyPins as $opId => $generated)
+        <div id="emergencyPinToast_{{ $opId }}" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-250 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-start gap-4">
                 <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
                     <i data-lucide="key" class="w-6 h-6 animate-bounce"></i>
                 </div>
                 <div class="text-center sm:text-left">
-                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Darurat Berhasil Dibuat!</h4>
+                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Darurat Aktif!</h4>
                     <p class="text-xs text-slate-650 mt-1 leading-relaxed">
-                        Berikan PIN berikut kepada <strong class="text-slate-900 font-bold">{{ $generated['operator_name'] }}</strong> untuk login.
+                        Berikan PIN berikut kepada <strong class="text-slate-900 font-bold">{{ $generated['operator_name'] }}</strong> untuk login tanpa HP.
                     </p>
                     <p class="text-[10px] text-emerald-700 font-semibold mt-1">
-                        *PIN ini hanya berlaku sekali pakai dan akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generated['expires_at'] }} WIB</strong> (20 menit dari sekarang).
+                        *PIN ini akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generated['expires_at'] }} WIB</strong> dan akan hilang setelah digunakan oleh operator.
                     </p>
                 </div>
             </div>
@@ -170,28 +170,32 @@
                 <div class="bg-white border-2 border-emerald-400 px-5 py-2.5 rounded-2xl shadow-inner font-mono text-2xl font-black text-emerald-600 tracking-widest select-all cursor-pointer" title="Klik untuk memblok PIN">
                     {{ $generated['pin'] }}
                 </div>
-                <button onclick="document.getElementById('emergencyPinToast').remove()" class="p-2 hover:bg-emerald-100 rounded-xl text-emerald-700 transition-all shrink-0" title="Tutup">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <form action="{{ route('operators.dismiss-emergency-pin', $opId) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="p-2 hover:bg-emerald-100 rounded-xl text-emerald-700 transition-all shrink-0" title="Tutup & Hapus PIN">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </form>
             </div>
         </div>
+        @endforeach
         @endif
         
-        <!-- Late PIN Generated Toast -->
-        @if(session('late_pin_generated'))
-        @php $generatedLate = session('late_pin_generated'); @endphp
-        <div id="latePinToast" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-250 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- Persistent Late PIN Generated Toasts (Cache-backed) -->
+        @if(isset($activeLatePins) && count($activeLatePins) > 0)
+        @foreach($activeLatePins as $opId => $generatedLate)
+        <div id="latePinToast_{{ $opId }}" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-250 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-start gap-4">
                 <div class="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-md">
                     <i data-lucide="clock" class="w-6 h-6 animate-bounce"></i>
                 </div>
                 <div class="text-center sm:text-left">
-                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Akses Keterlambatan Berhasil Dibuat!</h4>
+                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Akses Keterlambatan Aktif!</h4>
                     <p class="text-xs text-slate-650 mt-1 leading-relaxed">
                         Berikan PIN berikut kepada <strong class="text-slate-900 font-bold">{{ $generatedLate['operator_name'] }}</strong> untuk mengisi laporan terlambat.
                     </p>
                     <p class="text-[10px] text-amber-700 font-semibold mt-1">
-                        *PIN ini hanya berlaku sekali pakai dan akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generatedLate['expires_at'] }} WIB</strong> (1 jam dari sekarang).
+                        *PIN ini akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generatedLate['expires_at'] }} WIB</strong> dan akan hilang dari layar setelah laporan dikirim.
                     </p>
                 </div>
             </div>
@@ -199,11 +203,15 @@
                 <div class="bg-white border-2 border-amber-400 px-5 py-2.5 rounded-2xl shadow-inner font-mono text-2xl font-black text-amber-600 tracking-widest select-all cursor-pointer" title="Klik untuk memblok PIN">
                     {{ $generatedLate['pin'] }}
                 </div>
-                <button onclick="document.getElementById('latePinToast').remove()" class="p-2 hover:bg-amber-100 rounded-xl text-amber-700 transition-all shrink-0" title="Tutup">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <form action="{{ route('operators.dismiss-late-pin', $opId) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="p-2 hover:bg-amber-100 rounded-xl text-amber-700 transition-all shrink-0" title="Tutup & Hapus PIN">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </form>
             </div>
         </div>
+        @endforeach
         @endif
         
         @if(session('success'))
@@ -259,7 +267,7 @@
                 <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
                     <span class="text-3xs font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
                     <h3 class="text-2xl font-bold font-outfit text-amber-800 mt-1">
-                        {{ $reports->where('status', 'pending')->count() }}
+                        {{ $reports->whereIn('status', ['pending', 'pending_late'])->count() }}
                         <span class="text-2xs font-medium text-amber-500">laporan</span>
                     </h3>
                     <span class="text-3xs text-amber-600 block mt-1">Harus diverifikasi oleh Koordinator</span>
@@ -397,8 +405,12 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
                                     </span>
                                 @elseif($report->status == 'telat')
-                                    <span class="px-2 py-0.5 rounded bg-amber-550/15 text-amber-650 text-3xs font-bold border border-amber-500/20 flex items-center gap-1">
-                                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan
+                                    <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-3xs font-bold border border-emerald-600/20 flex items-center gap-1">
+                                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan (Disetujui)
+                                    </span>
+                                @elseif($report->status == 'pending_late')
+                                    <span class="px-2 py-0.5 rounded bg-amber-600/10 text-amber-700 text-3xs font-bold border border-amber-600/20 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Telat (Menunggu ACC)
                                     </span>
                                 @elseif($report->status == 'rejected')
                                     <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-3xs font-bold border border-rose-500/20 flex items-center gap-1">
@@ -1147,7 +1159,11 @@
                                         </span>
                                     @elseif($report->status == 'telat')
                                         <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-250 text-3xs font-bold uppercase flex items-center gap-1 shadow-sm">
-                                            <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan
+                                            <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat (Disetujui)
+                                        </span>
+                                    @elseif($report->status == 'pending_late')
+                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-250 text-3xs font-bold uppercase flex items-center gap-1 shadow-sm animate-pulse">
+                                            <span class="w-1 h-1 rounded-full bg-amber-500"></span> Telat (Menunggu ACC)
                                         </span>
                                     @elseif($report->status == 'rejected')
                                         <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-3xs font-bold uppercase animate-pulse">

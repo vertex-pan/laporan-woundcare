@@ -214,6 +214,7 @@ class AuthController extends Controller
 
         // Remove the pin from cache immediately to prevent reuse
         \Illuminate\Support\Facades\Cache::forget('emergency_pin_' . $operatorId);
+        \Illuminate\Support\Facades\Cache::forget('emergency_pin_meta_' . $operatorId);
 
         session([
             'operator_id' => $operator->id,
