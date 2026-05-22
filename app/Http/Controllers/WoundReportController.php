@@ -100,19 +100,29 @@ class WoundReportController extends Controller
                 ->withErrors('Nomor WhatsApp belum diatur. Silakan atur nomor WhatsApp aktif Anda terlebih dahulu di menu Pengaturan (ikon roda gigi di kanan atas) agar Anda bisa menerima notifikasi revisi.');
         }
 
-        // Check for duplicate report (same operator, date, and shift)
+        // Check for duplicate report (same operator, date, and mutually exclusive shift group)
+        $shiftGroups = [
+            'Shift 1' => ['Shift 1', 'Lembur Shift 1'],
+            'Lembur Shift 1' => ['Shift 1', 'Lembur Shift 1'],
+            'Shift 2' => ['Shift 2', 'Lembur Shift 2'],
+            'Lembur Shift 2' => ['Shift 2', 'Lembur Shift 2'],
+            'Shift 3' => ['Shift 3'],
+        ];
+        $targetShifts = $shiftGroups[$validated['shift']] ?? [$validated['shift']];
+
         $duplicateQuery = WoundReport::where('operator_id', session('operator_id'))
             ->where('tanggal', $validated['tanggal'])
-            ->where('shift', $validated['shift']);
+            ->whereIn('shift', $targetShifts);
 
         if ($request->filled('report_id')) {
             $duplicateQuery->where('id', '!=', $request->report_id);
         }
 
         if ($duplicateQuery->exists()) {
+            $existingReport = $duplicateQuery->first();
             return redirect()->back()
                 ->withInput()
-                ->withErrors('Duplikasi Laporan: Anda sudah mengirimkan laporan untuk Tanggal Kerja ' . $validated['tanggal'] . ' pada ' . $validated['shift'] . '. Anda tidak dapat mengirimkan laporan ganda pada shift yang sama. Silakan lakukan edit/revisi pada laporan yang sudah terdaftar di tabel Riwayat Laporan.');
+                ->withErrors('Duplikasi Laporan: Anda sudah mengirimkan laporan untuk Tanggal Kerja ' . $validated['tanggal'] . ' pada ' . $existingReport->shift . '. Anda tidak dapat mengirimkan laporan ganda pada shift yang sama (termasuk versi Lembur). Silakan lakukan edit/revisi pada laporan yang sudah terdaftar di tabel Riwayat Laporan.');
         }
 
         $role = session('operator_role');

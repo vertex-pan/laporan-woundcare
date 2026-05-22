@@ -1357,9 +1357,27 @@
                     const reportIdEl = document.getElementById('report_id');
                     const currentEditingId = reportIdEl ? reportIdEl.value : '';
 
-                    // Check for duplicate submission
-                    const key = `${selectedDate}|${selectedName}`;
-                    const existingId = submittedKeys[key];
+                    // Check for duplicate submission (with mutually exclusive shift groups)
+                    const shiftGroups = {
+                        'Shift 1': ['Shift 1', 'Lembur Shift 1'],
+                        'Lembur Shift 1': ['Shift 1', 'Lembur Shift 1'],
+                        'Shift 2': ['Shift 2', 'Lembur Shift 2'],
+                        'Lembur Shift 2': ['Shift 2', 'Lembur Shift 2'],
+                        'Shift 3': ['Shift 3']
+                    };
+                    const targetShifts = shiftGroups[selectedName] || [selectedName];
+
+                    let existingId = null;
+                    let existingShiftName = null;
+                    for (const s of targetShifts) {
+                        const k = `${selectedDate}|${s}`;
+                        if (submittedKeys[k]) {
+                            existingId = submittedKeys[k];
+                            existingShiftName = s;
+                            break;
+                        }
+                    }
+
                     const isDuplicate = existingId && String(existingId) !== String(currentEditingId);
 
                     const formInputs = [
@@ -1386,7 +1404,7 @@
                         }
 
                         // Show duplicate warning message
-                        warningTextEl.innerHTML = `<strong>Laporan Terkirim:</strong> Laporan untuk <strong>${selectedName}</strong> pada tanggal <strong>${selectedDate}</strong> sudah diisi. Anda tidak bisa mengirimkan laporan ganda pada shift yang sama. Silakan lakukan edit/revisi melalui tabel <strong>Riwayat Laporan Saya</strong> di bagian kanan.`;
+                        warningTextEl.innerHTML = `<strong>Laporan Terkirim:</strong> Laporan untuk <strong>${existingShiftName}</strong> pada tanggal <strong>${selectedDate}</strong> sudah diisi. Anda tidak bisa mengirimkan laporan ganda pada shift yang sama (termasuk versi Lembur). Silakan lakukan edit/revisi melalui tabel <strong>Riwayat Laporan Saya</strong> di bagian kanan (atau di bawah jika menggunakan handphone).`;
                         warningEl.classList.remove('hidden');
                         return;
                     }
