@@ -98,7 +98,7 @@
                 <!-- Logged In Operator & Logout -->
                 <div class="flex items-center gap-4">
                     @if(session('operator_role') === 'karyawan')
-                    <div id="countdown-header" class="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/50 text-[10px] sm:text-[11px] font-semibold shrink-0">
+                    <div id="countdown-header" class="hidden md:flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/50 text-[10px] sm:text-[11px] font-semibold shrink-0">
                         <i id="countdown-icon" data-lucide="timer" class="w-3.5 h-3.5 text-amber-400 animate-pulse"></i>
                         <span id="countdown-text" class="text-slate-350">Memuat...</span>
                     </div>
@@ -169,17 +169,7 @@
             <!-- ========================================== -->
             
             <!-- Stats Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <!-- Widget 1: Total Volume -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider block">Total Volume Hari Ini</span>
-                    <h3 class="text-2xl font-bold font-outfit text-slate-800 mt-1">
-                        {{ number_format($reports->sum('hasil')) }}
-                        <span class="text-2xs font-medium text-slate-400">PCS / unit</span>
-                    </h3>
-                    <span class="text-3xs text-slate-450 block mt-1">Dari total data yang terfilter</span>
-                </div>
-
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <!-- Widget 2: Pending Approval -->
                 <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
                     <span class="text-3xs font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
@@ -187,7 +177,7 @@
                         {{ $reports->where('status', 'pending')->count() }}
                         <span class="text-2xs font-medium text-amber-500">laporan</span>
                     </h3>
-                    <span class="text-3xs text-amber-600 block mt-1">Harus diverifikasi oleh Mba Ella / Hana</span>
+                    <span class="text-3xs text-amber-600 block mt-1">Harus diverifikasi oleh Koordinator</span>
                 </div>
 
                 <!-- Widget 3: Approved -->
@@ -211,10 +201,25 @@
                 </div>
             </div>
 
-            <!-- Filters Dashboard -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
-                <form action="{{ route('dashboard') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-                    <div>
+            <!-- Navigation Tabs for Coordinator Dashboard -->
+            <div class="flex border-b border-slate-200 mb-6 gap-2">
+                <button onclick="switchTab('reports-tab')" id="tab-btn-reports" class="py-2.5 px-4 text-xs font-bold text-primary-650 border-b-2 border-primary-600 transition-all flex items-center gap-1.5 focus:outline-none">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                    Laporan Produksi
+                </button>
+                <button onclick="switchTab('operators-tab')" id="tab-btn-operators" class="py-2.5 px-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition-all flex items-center gap-1.5 focus:outline-none">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    Daftar Operator & Vendor
+                </button>
+            </div>
+
+            <!-- Tab 1: Laporan Produksi Content -->
+            <div id="reports-tab-content" class="tab-content space-y-6">
+
+                <!-- Filters Dashboard -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <form action="{{ route('dashboard') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                        <div>
                         <label class="text-xs font-bold text-slate-500 block mb-1">Status Laporan</label>
                         <select name="status" class="w-full rounded-lg border border-slate-350 bg-white py-2 px-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary-500">
                             <option value="">Semua Status</option>
@@ -363,6 +368,7 @@
                     @endforelse
                 </div>
             </div>
+            </div> <!-- Close of reports-tab-content -->
 
             <!-- Inline Reject Dialog Modal overlay (Hidden initially) -->
             <div id="rejectModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 hidden">
@@ -395,6 +401,58 @@
                 </div>
             </div>
 
+            <!-- Inline Edit Operator Modal overlay (Hidden initially) -->
+            <div id="editOperatorModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-scale-up">
+                    <div class="bg-primary-900 text-white p-4 flex items-center gap-2">
+                        <i data-lucide="user-cog" class="w-5 h-5 text-primary-450"></i>
+                        <h3 class="font-bold font-outfit">Edit Informasi Operator</h3>
+                    </div>
+                    <form id="editOperatorForm" method="POST" class="p-5 space-y-4">
+                        @csrf
+                        @method('PUT')
+                        
+                        <div class="space-y-1.5">
+                            <label for="edit_operator_name" class="text-xs font-bold text-slate-700 block">Nama Operator <span class="text-rose-500">*</span></label>
+                            <input type="text" id="edit_operator_name" name="name" required class="w-full rounded-lg border border-slate-350 p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" />
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="edit_operator_vendor" class="text-xs font-bold text-slate-700 block">Vendor <span class="text-rose-500">*</span></label>
+                            <select id="edit_operator_vendor" name="vendor" required class="w-full rounded-lg border border-slate-350 p-2.5 text-xs text-slate-850 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                <option value="AA">AA</option>
+                                <option value="IPS">IPS</option>
+                                <option value="JMI">JMI</option>
+                                <option value="KWI">KWI</option>
+                                <option value="MJA">MJA</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="edit_operator_role" class="text-xs font-bold text-slate-700 block">Role <span class="text-rose-500">*</span></label>
+                            <select id="edit_operator_role" name="role" required class="w-full rounded-lg border border-slate-350 p-2.5 text-xs text-slate-850 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                <option value="karyawan">Karyawan</option>
+                                <option value="coordinator">Koordinator</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="edit_operator_whatsapp" class="text-xs font-bold text-slate-700 block">Nomor WhatsApp</label>
+                            <input type="text" id="edit_operator_whatsapp" name="whatsapp" placeholder="Contoh: 081234567890" class="w-full rounded-lg border border-slate-350 p-2.5 text-xs text-slate-850 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" />
+                        </div>
+
+                        <div class="flex justify-end gap-2.5 pt-2">
+                            <button type="button" onclick="closeEditOperatorModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 transition-all">
+                                Batal
+                            </button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md transition-all">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <script>
                 function openRejectDialog(reportId, operatorName, productName) {
                     const modal = document.getElementById('rejectModal');
@@ -411,7 +469,220 @@
                     document.getElementById('rejectModal').classList.add('hidden');
                     document.getElementById('catatan_revisi').value = '';
                 }
+
+                function openEditOperatorModal(id, name, vendor, role, whatsapp) {
+                    const modal = document.getElementById('editOperatorModal');
+                    const form = document.getElementById('editOperatorForm');
+                    
+                    form.action = `/operators/${id}`;
+                    document.getElementById('edit_operator_name').value = name;
+                    document.getElementById('edit_operator_vendor').value = vendor;
+                    document.getElementById('edit_operator_role').value = role;
+                    document.getElementById('edit_operator_whatsapp').value = whatsapp || '';
+                    
+                    modal.classList.remove('hidden');
+                }
+
+                function closeEditOperatorModal() {
+                    document.getElementById('editOperatorModal').classList.add('hidden');
+                }
+
+                function switchTab(tabId) {
+                    const contents = document.querySelectorAll('.tab-content');
+                    contents.forEach(content => content.classList.add('hidden'));
+
+                    const btnReports = document.getElementById('tab-btn-reports');
+                    const btnOperators = document.getElementById('tab-btn-operators');
+                    
+                    if (btnReports) {
+                        btnReports.className = "py-2.5 px-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition-all flex items-center gap-1.5 focus:outline-none";
+                    }
+                    if (btnOperators) {
+                        btnOperators.className = "py-2.5 px-4 text-xs font-bold text-slate-500 hover:text-slate-700 transition-all flex items-center gap-1.5 focus:outline-none";
+                    }
+
+                    const activeContent = document.getElementById(`${tabId}-content`);
+                    if (activeContent) {
+                        activeContent.classList.remove('hidden');
+                    }
+
+                    const activeBtn = document.getElementById(`tab-btn-${tabId.split('-')[0]}`);
+                    if (activeBtn) {
+                        activeBtn.className = "py-2.5 px-4 text-xs font-bold text-primary-650 border-b-2 border-primary-600 transition-all flex items-center gap-1.5 focus:outline-none";
+                    }
+
+                    localStorage.setItem('activeTab', tabId);
+                }
+
+                function switchVendorTab(vendorName) {
+                    const contents = document.querySelectorAll('.vendor-tab-content');
+                    contents.forEach(content => content.classList.add('hidden'));
+
+                    const activeContent = document.getElementById(`vendor-tab-${vendorName}`);
+                    if (activeContent) {
+                        activeContent.classList.remove('hidden');
+                    }
+
+                    const vendors = ['AA', 'IPS', 'JMI', 'KWI', 'MJA'];
+                    vendors.forEach(v => {
+                        const btn = document.getElementById(`vtab-btn-${v}`);
+                        if (btn) {
+                            if (v === vendorName) {
+                                btn.className = "py-2 px-3 text-xs font-bold transition-all shrink-0 rounded-lg bg-slate-100 text-slate-800 focus:outline-none";
+                            } else {
+                                btn.className = "py-2 px-3 text-xs font-bold transition-all shrink-0 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 focus:outline-none";
+                            }
+                        }
+                    });
+                    
+                    localStorage.setItem('activeVendorTab', vendorName);
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    const savedTab = localStorage.getItem('activeTab') || 'reports-tab';
+                    switchTab(savedTab);
+
+                    const savedVendorTab = localStorage.getItem('activeVendorTab') || 'AA';
+                    switchVendorTab(savedVendorTab);
+                });
             </script>
+
+            <!-- Tab 2: Daftar Operator & Vendor Content -->
+            <div id="operators-tab-content" class="tab-content hidden space-y-6">
+                <!-- Summary Card -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider font-outfit mb-3">Status Pendaftaran Operator Google</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        @foreach(['KWI', 'MJA', 'AA', 'IPS', 'JMI'] as $vName)
+                            @php
+                                $vOps = $allOperators->where('vendor', $vName);
+                                $total = $vOps->count();
+                                $registered = $vOps->whereNotNull('email')->count();
+                            @endphp
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+                                <span class="text-2xs font-extrabold uppercase text-slate-400 tracking-wider block">{{ $vName }}</span>
+                                <span class="text-sm font-bold text-slate-700 block mt-1">
+                                    {{ $registered }} <span class="text-3xs font-medium text-slate-400">/ {{ $total }}</span>
+                                </span>
+                                <span class="text-[9px] font-bold text-emerald-600 block mt-0.5">
+                                    @if($total > 0)
+                                        {{ round(($registered / $total) * 100) }}% Terdaftar
+                                    @else
+                                        0%
+                                    @endif
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Sub-tabs for Vendors -->
+                <div class="flex border-b border-slate-200 mb-4 gap-1.5 overflow-x-auto pb-1">
+                    @foreach(['AA', 'IPS', 'JMI', 'KWI', 'MJA'] as $index => $vName)
+                        <button onclick="switchVendorTab('{{ $vName }}')" id="vtab-btn-{{ $vName }}" class="py-2 px-3 text-xs font-bold transition-all shrink-0 rounded-lg {{ $index === 0 ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }} focus:outline-none">
+                            Vendor {{ $vName }} ({{ $allOperators->where('vendor', $vName)->count() }})
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- Vendor Operator Lists -->
+                <div>
+                    @foreach(['AA', 'IPS', 'JMI', 'KWI', 'MJA'] as $index => $vendor)
+                    @php
+                        $ops = $allOperators->where('vendor', $vendor);
+                    @endphp
+                    <div id="vendor-tab-{{ $vendor }}" class="vendor-tab-content {{ $index === 0 ? '' : 'hidden' }} bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                        <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                            <h4 class="font-bold text-xs text-slate-700 font-outfit uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i>
+                                Vendor {{ $vendor }}
+                            </h4>
+                            <span class="text-3xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                                {{ $ops->count() }} Operator
+                            </span>
+                        </div>
+                        <div class="divide-y divide-slate-100 flex-1 overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100">
+                                        <th class="py-2.5 px-4 font-outfit">Nama</th>
+                                        <th class="py-2.5 px-4 font-outfit">Role</th>
+                                        <th class="py-2.5 px-4 font-outfit">WhatsApp</th>
+                                        <th class="py-2.5 px-4 font-outfit">Status & Email</th>
+                                        <th class="py-2.5 px-4 text-right font-outfit">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach($ops as $op)
+                                    <tr class="hover:bg-slate-50/40">
+                                        <td class="py-3 px-4 font-semibold text-slate-800">{{ $op->name }}</td>
+                                        <td class="py-3 px-4">
+                                            @if($op->role === 'coordinator')
+                                                <span class="text-[9px] uppercase tracking-wider bg-violet-100 text-violet-850 px-1.5 py-0.5 rounded font-extrabold font-outfit">Koordinator</span>
+                                            @else
+                                                <span class="text-[9px] uppercase tracking-wider bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-extrabold font-outfit">Karyawan</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-4 font-mono text-slate-700">
+                                            {{ $op->whatsapp ?: '-' }}
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            @if($op->email)
+                                                <div class="flex flex-col">
+                                                    <span class="text-[9px] font-bold text-emerald-600 flex items-center gap-1">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                        Terhubung
+                                                    </span>
+                                                    <span class="text-2xs text-slate-500 mt-0.5 font-mono">{{ $op->email }}</span>
+                                                </div>
+                                            @else
+                                                <span class="text-[9px] font-bold text-slate-400 flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                                    Belum Terhubung
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-4 text-right">
+                                            <div class="flex items-center justify-end gap-1.5">
+                                                <!-- Edit Button -->
+                                                <button type="button" onclick="openEditOperatorModal('{{ $op->id }}', '{{ addslashes($op->name) }}', '{{ $op->vendor }}', '{{ $op->role }}', '{{ $op->whatsapp }}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="Edit Operator">
+                                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                                </button>
+
+                                                <!-- Reset Google Link Button -->
+                                                @if($op->email)
+                                                    <form action="{{ route('operators.reset-email', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin melepas akun Google untuk operator {{ $op->name }}? Hal ini memungkinkan operator mendaftarkan ulang email Google mereka.');" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="Reset email terdaftar">
+                                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+
+                                                <!-- Delete Button -->
+                                                <form action="{{ route('operators.destroy', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus operator {{ $op->name }}? Semua data laporan yang berkaitan akan tetap ada namun status operatornya diset menjadi null.');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition-colors" title="Hapus Operator">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                    @if($ops->isEmpty())
+                                    <tr>
+                                        <td colspan="4" class="py-4 text-center text-slate-400 italic">Tidak ada operator untuk vendor ini</td>
+                                    </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
 
         @else
             
@@ -467,27 +738,30 @@
 
                             <!-- Countdown & Cooldown Info Banner -->
                             @if(session('operator_role') === 'karyawan')
-                            <div class="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3 shadow-sm">
-                                <div class="flex items-center gap-3 cursor-pointer select-none" onclick="toggleScheduleCollapse()">
-                                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0" id="countdown-form-icon-bg">
-                                        <i id="countdown-form-icon" data-lucide="timer" class="w-4 h-4 text-amber-600 animate-pulse"></i>
-                                    </div>
-                                    <div class="text-left flex-1 min-w-0">
-                                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Status Batas Pelaporan</span>
-                                        <span id="countdown-form-text" class="text-xs font-semibold text-slate-700 block mt-0.5">Memuat sisa waktu...</span>
+                            <div class="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3.5 shadow-sm">
+                                <div class="flex items-start justify-between gap-3 cursor-pointer select-none" onclick="toggleScheduleCollapse()">
+                                    <div class="flex items-start gap-3 min-w-0">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5" id="countdown-form-icon-bg">
+                                            <i id="countdown-form-icon" data-lucide="timer" class="w-4 h-4 text-amber-600 animate-pulse"></i>
+                                        </div>
+                                        <div class="text-left min-w-0">
+                                            <span class="text-[10px] uppercase tracking-wider text-slate-450 font-bold block leading-none">Status Batas Pelaporan</span>
+                                            <div id="countdown-form-status" class="text-xs font-extrabold mt-1 text-slate-800">Memuat status...</div>
+                                            <div id="countdown-form-timer" class="text-[11px] text-slate-500 mt-1">Memuat sisa waktu...</div>
+                                        </div>
                                     </div>
                                     <!-- Toggle Collapse Chevron -->
-                                    <div class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                                    <div class="text-slate-400 hover:text-slate-650 transition-colors p-1 shrink-0 self-center">
                                         <i id="schedule-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
                                     </div>
                                 </div>
-                                <div id="schedule-details" class="hidden border-t border-slate-200/60 pt-2.5">
-                                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Jadwal Pengisian Laporan:</span>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div id="schedule-details" class="hidden border-t border-slate-200/60 pt-3">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-2">Jadwal Pengisian Laporan:</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         @foreach($shiftWindows as $sName => $sInfo)
-                                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200/60">
-                                            <span class="font-medium text-slate-700">{{ $sName }}</span>
-                                            <span class="text-primary-600 font-bold">Batas: {{ $sInfo['window'] }}</span>
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-slate-50 px-2.5 py-2 rounded border border-slate-200/60">
+                                            <span class="font-bold text-slate-700 text-xs sm:text-[11px]">{{ $sName }}</span>
+                                            <span class="text-primary-650 font-bold text-[10px] sm:text-[11px]">Batas: {{ $sInfo['window'] }}</span>
                                         </div>
                                         @endforeach
                                     </div>
@@ -504,7 +778,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
                                         <i data-lucide="calendar" class="w-4 h-4"></i>
                                     </span>
-                                    <input type="date" name="tanggal" id="tanggal" required class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ date('Y-m-d') }}">
+                                    <input type="date" name="tanggal" id="tanggal" required min="{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}" max="{{ now('Asia/Jakarta')->format('Y-m-d') }}" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ now('Asia/Jakarta')->format('Y-m-d') }}">
                                 </div>
                             </div>
 
@@ -540,6 +814,12 @@
                                     </label>
                                     @endforeach
 
+                                </div>
+
+                                <!-- Shift Warning Message -->
+                                <div id="shift-warning" class="hidden text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2.5 flex items-start gap-2 mt-2.5">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5 animate-bounce"></i>
+                                    <div id="shift-warning-text"></div>
                                 </div>
                             </div>
                         </div>
@@ -601,7 +881,7 @@
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
                                             <i data-lucide="hash" class="w-4 h-4"></i>
                                         </span>
-                                        <input type="number" name="hasil" id="hasil" required placeholder="0" min="0" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                        <input type="text" name="hasil" id="hasil" required placeholder="0" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                                     </div>
                                 </div>
 
@@ -623,8 +903,27 @@
                                     <span class="absolute top-3 left-3 pointer-events-none text-slate-450">
                                         <i data-lucide="file-text" class="w-4 h-4"></i>
                                     </span>
-                                    <textarea name="keterangan" id="keterangan" required rows="2" placeholder="Tuliskan catatan kerja atau kendala (jika tidak ada kendala, tulis 'Lancar' atau '-')" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
+                                    <textarea name="keterangan" id="keterangan" required rows="2" placeholder="Tuliskan catatan kerja atau kendala (jika tidak ada kendala, tulis 'Lancar' or '-')" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 4: WhatsApp Notification -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
+                                <i data-lucide="message-square" class="w-4 h-4 text-emerald-600"></i>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Notifikasi WhatsApp</h3>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-650 block">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
+                                        <i data-lucide="phone" class="w-4 h-4"></i>
+                                    </span>
+                                    <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 081234567890" value="{{ session('operator_whatsapp') }}" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                </div>
+                                <p class="text-3xs text-slate-500">Penting: Masukkan nomor WA aktif Anda agar sistem dapat mengirimkan notifikasi revisi jika laporan ditolak oleh Koordinator.</p>
                             </div>
                         </div>
 
@@ -767,6 +1066,9 @@
                             card.classList.add('border-slate-300');
                         }
                     });
+                    if (typeof validateShiftSelection === 'function') {
+                        validateShiftSelection();
+                    }
                 }
 
                 // Toggle shift schedule details collapse
@@ -784,14 +1086,17 @@
                     }
                 }
 
+                // Global server time synced from Laravel PHP
+                let serverTime = new Date({{ now('Asia/Jakarta')->timestamp * 1000 }});
+
                 // Initial setup
                 updateRadioStyles();
 
                 // Countdown timer for Karyawan
                 const countdownText = document.getElementById('countdown-text');
-                const countdownFormText = document.getElementById('countdown-form-text');
-                if (countdownText || countdownFormText) {
-                    let serverTime = new Date({{ now('Asia/Jakarta')->timestamp * 1000 }});
+                const countdownFormStatus = document.getElementById('countdown-form-status');
+                const countdownFormTimer = document.getElementById('countdown-form-timer');
+                if (countdownText || countdownFormStatus || countdownFormTimer) {
                     
                     function updateCountdown() {
                         serverTime.setSeconds(serverTime.getSeconds() + 1);
@@ -840,8 +1145,11 @@
                             if (countdownText) {
                                 countdownText.innerHTML = `<span class="text-emerald-400 font-bold">Bisa Laporan (${activeWindow.name})</span> sisa: <span class="font-mono text-white font-bold">${timeStr}</span>`;
                             }
-                            if (countdownFormText) {
-                                countdownFormText.innerHTML = `<span class="text-emerald-600 font-bold">Terbuka (${activeWindow.name})</span> &bull; Sisa waktu pengisian: <span class="font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">${timeStr}</span>`;
+                            if (countdownFormStatus) {
+                                countdownFormStatus.innerHTML = `<span class="text-emerald-600 font-bold">Bisa Laporan &bull; ${activeWindow.name}</span>`;
+                            }
+                            if (countdownFormTimer) {
+                                countdownFormTimer.innerHTML = `Sisa waktu pengisian: <span class="font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px]">${timeStr}</span>`;
                             }
                             
                             if (countdownIcon) {
@@ -894,15 +1202,18 @@
                                 if (countdownText) {
                                     countdownText.innerHTML = `Buka dalam: <span class="font-mono text-amber-400 font-bold">${timeStr}</span> (${nextW.name}${isTomorrow ? ' Besok' : ''})`;
                                 }
-                                if (countdownFormText) {
-                                    countdownFormText.innerHTML = `<span class="text-amber-600 font-bold">Ditutup</span> &bull; Buka dalam: <span class="font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">${timeStr}</span> (${nextW.name}${isTomorrow ? ' Besok' : ''})`;
+                                if (countdownFormStatus) {
+                                    countdownFormStatus.innerHTML = `<span class="text-amber-600 font-bold">Laporan Ditutup</span>`;
+                                }
+                                if (countdownFormTimer) {
+                                    countdownFormTimer.innerHTML = `Buka dalam: <span class="font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px]">${timeStr}</span> (${nextW.name}${isTomorrow ? ' Besok' : ''})`;
                                 }
                                 
                                 if (countdownIcon) {
                                     countdownIcon.className = 'w-3.5 h-3.5 text-amber-400 animate-pulse';
                                 }
                                 if (countdownFormIconBg) {
-                                    countdownFormIconBg.className = 'w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0';
+                                    countdownFormIconBg.className = 'w-8 h-8 rounded-lg bg-amber-150 text-amber-700 flex items-center justify-center shrink-0';
                                 }
                                 if (countdownFormIcon) {
                                     countdownFormIcon.className = 'w-4 h-4 animate-pulse text-amber-650';
@@ -930,7 +1241,14 @@
                     document.getElementById('pengerjaan').value = report.pengerjaan;
                     document.getElementById('jenis_produk').value = report.jenis_produk;
                     document.getElementById('produk_yang_dikerjakan').value = report.produk_yang_dikerjakan;
-                    document.getElementById('hasil').value = report.hasil;
+                    
+                    // Format hasil with thousand separator
+                    if (report.hasil) {
+                        document.getElementById('hasil').value = parseInt(report.hasil, 10).toLocaleString('id-ID');
+                    } else {
+                        document.getElementById('hasil').value = '';
+                    }
+
                     document.getElementById('satuan').value = report.satuan;
                     document.getElementById('keterangan').value = report.keterangan;
 
@@ -951,7 +1269,7 @@
                 }
 
                 function clearFormFields() {
-                    document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('tanggal').value = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
                     document.getElementById('pengerjaan').selectedIndex = 0;
                     document.getElementById('jenis_produk').selectedIndex = 0;
                     document.getElementById('produk_yang_dikerjakan').value = '';
@@ -967,6 +1285,135 @@
                         document.getElementById('editBanner').classList.add('hidden');
                     }
                 }
+
+                // Form submit handler (disable double-submit)
+                const prodForm = document.getElementById('productionForm');
+                if (prodForm) {
+                    prodForm.addEventListener('submit', function(e) {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin shrink-0"></i> <span>Mengirim Laporan...</span>';
+                            lucide.createIcons();
+                        }
+                    });
+                }
+
+                // Hasil input formatting (thousands separator)
+                const hasilInput = document.getElementById('hasil');
+                if (hasilInput) {
+                    // Also format initially if any old value is present
+                    if (hasilInput.value) {
+                        let cleaned = hasilInput.value.replace(/\D/g, '');
+                        if (cleaned) {
+                            hasilInput.value = parseInt(cleaned, 10).toLocaleString('id-ID');
+                        }
+                    }
+                    hasilInput.addEventListener('input', function(e) {
+                        let val = this.value.replace(/\D/g, '');
+                        if (val) {
+                            val = parseInt(val, 10).toLocaleString('id-ID');
+                        }
+                        this.value = val;
+                    });
+                }
+
+                // Auto select active shift based on current server time
+                function autoSelectActiveShift() {
+                    if (typeof serverTime === 'undefined' || !serverTime) return;
+                    
+                    const hr = serverTime.getHours();
+                    const mn = serverTime.getMinutes();
+                    const timeStr = `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+                    
+                    // Shift windows
+                    const config = [
+                        { name: 'Shift 3', start: '04:00', end: '07:00' },
+                        { name: 'Shift 1', start: '12:00', end: '15:00' },
+                        { name: 'Lembur Shift 1', start: '16:00', end: '19:00' },
+                        { name: 'Shift 2', start: '20:00', end: '23:00' },
+                        { name: 'Lembur Shift 2', start: '04:00', end: '07:00' }
+                    ];
+                    
+                    let active = null;
+                    for (const c of config) {
+                        if (timeStr >= c.start && timeStr < c.end) {
+                            active = c.name;
+                            break;
+                        }
+                    }
+                    
+                    if (active) {
+                        const radio = document.querySelector(`input[name="shift"][value="${active}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                            updateRadioStyles();
+                        }
+                    }
+                }
+
+                // Validate if selected shift is active based on server time
+                function validateShiftSelection() {
+                    const selectedRadio = document.querySelector('input[name="shift"]:checked');
+                    if (!selectedRadio) return;
+                    
+                    const selectedName = selectedRadio.value;
+                    const warningEl = document.getElementById('shift-warning');
+                    const warningTextEl = document.getElementById('shift-warning-text');
+                    if (!warningEl || !warningTextEl) return;
+                    
+                    if (typeof serverTime === 'undefined' || !serverTime) {
+                        warningEl.classList.add('hidden');
+                        return;
+                    }
+                    
+                    // Auto-adjust date picker based on selected shift (only if NOT in edit mode)
+                    const isEditMode = document.getElementById('report_id') && document.getElementById('report_id').value !== '';
+                    if (!isEditMode) {
+                        const dateInput = document.getElementById('tanggal');
+                        if (dateInput) {
+                            const todayDateStr = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
+                            const yesterdayDateStr = "{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}";
+                            
+                            if (selectedName === 'Shift 3' || selectedName === 'Lembur Shift 2') {
+                                dateInput.value = yesterdayDateStr;
+                            } else {
+                                dateInput.value = todayDateStr;
+                            }
+                        }
+                    }
+                    
+                    const hr = serverTime.getHours();
+                    const mn = serverTime.getMinutes();
+                    const currentTimeStr = `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+                    
+                    const config = {
+                        'Shift 1': { start: '12:00', end: '15:00', label: '12.00 - 15.00' },
+                        'Shift 2': { start: '20:00', end: '23:00', label: '20.00 - 23.00' },
+                        'Shift 3': { start: '04:00', end: '07:00', label: '04.00 - 07.00 pagi' },
+                        'Lembur Shift 1': { start: '16:00', end: '19:00', label: '16.00 - 19.00' },
+                        'Lembur Shift 2': { start: '04:00', end: '07:00', label: '04.00 - 07.00 pagi' }
+                    };
+                    
+                    const rules = config[selectedName];
+                    if (!rules) {
+                        warningEl.classList.add('hidden');
+                        return;
+                    }
+                    
+                    const isAllowed = (currentTimeStr >= rules.start && currentTimeStr < rules.end);
+                    
+                    if (!isAllowed) {
+                        warningTextEl.innerHTML = `<strong>Perhatian:</strong> Jam pengisian untuk <strong>${selectedName}</strong> adalah pukul <strong>${rules.label}</strong>. Jam server saat ini <strong>${currentTimeStr}</strong>. Laporan ini tidak akan dapat dikirimkan.`;
+                        warningEl.classList.remove('hidden');
+                    } else {
+                        warningEl.classList.add('hidden');
+                    }
+                }
+
+                // Run on page load
+                autoSelectActiveShift();
+                validateShiftSelection();
             </script>
             
         @endif

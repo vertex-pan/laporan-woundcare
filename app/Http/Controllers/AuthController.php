@@ -41,6 +41,7 @@ class AuthController extends Controller
             'operator_name' => $operator->name,
             'operator_vendor' => $operator->vendor,
             'operator_role' => $operator->role,
+            'operator_whatsapp' => $operator->whatsapp,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Berhasil masuk sebagai ' . $operator->name);
@@ -71,6 +72,7 @@ class AuthController extends Controller
                     'operator_name' => $operator->name,
                     'operator_vendor' => $operator->vendor,
                     'operator_role' => $operator->role,
+                    'operator_whatsapp' => $operator->whatsapp,
                 ]);
 
                 return redirect()->route('dashboard')->with('success', 'Berhasil masuk via Google sebagai ' . $operator->name);
@@ -138,6 +140,7 @@ class AuthController extends Controller
             'operator_name' => $operator->name,
             'operator_vendor' => $operator->vendor,
             'operator_role' => $operator->role,
+            'operator_whatsapp' => $operator->whatsapp,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Akun Google berhasil dihubungkan. Selamat bekerja, ' . $operator->name . '!');
@@ -145,7 +148,7 @@ class AuthController extends Controller
 
     public function logout()
     {
-        session()->forget(['operator_id', 'operator_name', 'operator_vendor', 'operator_role']);
+        session()->forget(['operator_id', 'operator_name', 'operator_vendor', 'operator_role', 'operator_whatsapp']);
         return redirect()->route('login')->with('success', 'Berhasil keluar dari sistem.');
     }
 }

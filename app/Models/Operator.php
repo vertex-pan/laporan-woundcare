@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Operator extends Model
 {
-    protected $fillable = ['name', 'vendor', 'email', 'role'];
+    protected $fillable = ['name', 'vendor', 'email', 'role', 'whatsapp'];
 }

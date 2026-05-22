@@ -69,6 +69,11 @@ class WoundReportController extends Controller
 
     public function store(Request $request)
     {
+        // Clean 'hasil' from thousands separator dots
+        if ($request->has('hasil')) {
+            $request->merge(['hasil' => str_replace('.', '', $request->hasil)]);
+        }
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'pengerjaan' => 'required|string|max:255',
@@ -78,6 +83,7 @@ class WoundReportController extends Controller
             'produk_yang_dikerjakan' => 'required|string|max:255',
             'satuan' => 'required|string|max:255',
             'keterangan' => 'required|string',
+            'whatsapp' => 'required|string|max:20',
         ]);
 
         $role = session('operator_role');
@@ -99,6 +105,16 @@ class WoundReportController extends Controller
         $validated['vendor'] = session('operator_vendor');
         $validated['status'] = 'pending';
         $validated['catatan_revisi'] = null;
+
+        // 3. Update operator's WhatsApp number in DB and session
+        $whatsapp = $validated['whatsapp'];
+        unset($validated['whatsapp']);
+
+        $op = Operator::find(session('operator_id'));
+        if ($op) {
+            $op->update(['whatsapp' => $whatsapp]);
+            session(['operator_whatsapp' => $whatsapp]);
+        }
 
         // If editing an existing report (e.g. resubmitting a rejected draft)
         if ($request->filled('report_id')) {
@@ -144,6 +160,23 @@ class WoundReportController extends Controller
             'status' => 'rejected',
             'catatan_revisi' => $request->catatan_revisi
         ]);
+
+        // Send WhatsApp notification using WablasService
+        $operator = Operator::find($report->operator_id);
+        if ($operator && !empty($operator->whatsapp)) {
+            try {
+                $wablas = new \App\Services\WablasService();
+                $message = "Halo *{$operator->name}*,\n\n"
+                         . "Laporan produksi Anda untuk produk *{$report->produk_yang_dikerjakan}* (Shift: {$report->shift}, Tanggal: {$report->tanggal}) telah *DITOLAK oleh Koordinator*.\n\n"
+                         . "*Catatan Revisi*:\n"
+                         . "\"{$request->catatan_revisi}\"\n\n"
+                         . "Mohon segera lakukan perbaikan laporan melalui tautan berikut:\n"
+                         . "https://woundcare.fun";
+                $wablas->send($operator->whatsapp, $message);
+            } catch (\Exception $e) {
+                // Logged inside WablasService, we continue execution without crashing
+            }
+        }
 
         return redirect()->route('dashboard')->with('success', 'Laporan dari ' . $report->operator . ' ditolak untuk direvisi.');
     }
@@ -198,5 +231,54 @@ class WoundReportController extends Controller
             'allowed' => false,
             'reason' => "Form pengisian untuk {$shiftName} hanya dibuka pada pukul {$rule['desc']}. Jam server saat ini: {$timeString}."
         ];
+    }
+
+    public function resetEmail($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        $operator = Operator::findOrFail($id);
+        $operator->email = null;
+        $operator->save();
+
+        return redirect()->back()->with('success', "Akun Google untuk operator {$operator->name} berhasil di-reset.");
+    }
+
+    public function updateOperator(Request $request, $id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'vendor' => 'required|string|in:KWI,MJA,AA,IPS,JMI',
+            'role' => 'required|string|in:coordinator,karyawan',
+            'whatsapp' => 'nullable|string|max:20',
+        ]);
+
+        $operator = Operator::findOrFail($id);
+        $operator->name = $request->input('name');
+        $operator->vendor = $request->input('vendor');
+        $operator->role = $request->input('role');
+        $operator->whatsapp = $request->input('whatsapp');
+        $operator->save();
+
+        return redirect()->back()->with('success', "Data operator {$operator->name} berhasil diperbarui.");
+    }
+
+    public function destroyOperator($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        $operator = Operator::findOrFail($id);
+        $name = $operator->name;
+        $operator->delete();
+
+        return redirect()->back()->with('success', "Operator {$name} berhasil dihapus.");
     }
 }

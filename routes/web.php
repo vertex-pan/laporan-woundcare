@@ -24,4 +24,7 @@ Route::middleware(['operator.auth'])->group(function () {
     // Coordinator approval routes
     Route::post('/wound-reports/{id}/approve', [WoundReportController::class, 'approve'])->name('wound-reports.approve');
     Route::post('/wound-reports/{id}/reject', [WoundReportController::class, 'reject'])->name('wound-reports.reject');
+    Route::post('/operators/{id}/reset-email', [WoundReportController::class, 'resetEmail'])->name('operators.reset-email');
+    Route::put('/operators/{id}', [WoundReportController::class, 'updateOperator'])->name('operators.update');
+    Route::delete('/operators/{id}', [WoundReportController::class, 'destroyOperator'])->name('operators.destroy');
 });
