@@ -666,7 +666,20 @@
                                 <tbody class="divide-y divide-slate-100">
                                     @foreach($ops as $op)
                                     <tr class="hover:bg-slate-50/40">
-                                        <td class="py-3 px-4 font-semibold text-slate-800">{{ $op->name }}</td>
+                                        <td class="py-3 px-4">
+                                            <span class="font-semibold text-slate-800 block leading-normal">{{ $op->name }}</span>
+                                            @php
+                                                $activePin = \Illuminate\Support\Facades\Cache::get('emergency_pin_' . $op->id);
+                                            @endphp
+                                            @if($activePin)
+                                                <div class="mt-1 flex items-center">
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase border border-emerald-200 animate-pulse" title="PIN Darurat Sementara Aktif">
+                                                        <i data-lucide="key" class="w-2.5 h-2.5"></i>
+                                                        PIN: {{ $activePin }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="py-3 px-4">
                                             @if($op->role === 'coordinator')
                                                 <span class="text-[9px] uppercase tracking-wider bg-violet-100 text-violet-850 px-1.5 py-0.5 rounded font-extrabold font-outfit">Koordinator</span>
