@@ -1162,44 +1162,49 @@
                                             @endif
                                         </td>
                                         <td class="py-3 px-4 text-right">
-                                            <div class="flex items-center justify-end gap-1.5">
+                                            <div class="flex flex-wrap items-center justify-end gap-1.5 min-w-[200px] md:min-w-0">
                                                 <!-- Generate Emergency PIN Button -->
-                                                <form action="{{ route('operators.generate-pin', $op->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Darurat Sementara untuk {{ $op->name }}? PIN ini akan aktif selama 20 menit.');">
+                                                <form action="{{ route('operators.generate-pin', $op->id) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Darurat Sementara untuk {{ $op->name }}? PIN ini akan aktif selama 20 menit.');">
                                                     @csrf
-                                                    <button type="submit" class="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 p-1.5 rounded-lg border border-transparent hover:border-emerald-200 transition-colors" title="Generate PIN Darurat">
-                                                        <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                                                    <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all active:scale-95 text-[10px] font-bold" title="Generate PIN Darurat">
+                                                        <i data-lucide="key" class="w-3.5 h-3.5 shrink-0"></i>
+                                                        <span>PIN Darurat</span>
                                                     </button>
                                                 </form>
 
                                                 <!-- Generate Late PIN Button -->
-                                                <form action="{{ route('operators.generate-late-pin', $op->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Akses Keterlambatan untuk {{ $op->name }}? PIN ini akan aktif selama 1 jam.');">
+                                                <form action="{{ route('operators.generate-late-pin', $op->id) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Akses Keterlambatan untuk {{ $op->name }}? PIN ini akan aktif selama 1 jam.');">
                                                     @csrf
-                                                    <button type="submit" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="Generate PIN Telat Laporan">
-                                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                                    <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-all active:scale-95 text-[10px] font-bold" title="Generate PIN Telat Laporan">
+                                                        <i data-lucide="clock" class="w-3.5 h-3.5 shrink-0"></i>
+                                                        <span>PIN Telat</span>
                                                     </button>
                                                 </form>
 
                                                 <!-- Edit Button -->
-                                                <button type="button" onclick="openEditOperatorModal('{{ $op->id }}', '{{ addslashes($op->name) }}', '{{ $op->vendor }}', '{{ $op->role }}', '{{ $op->whatsapp }}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="Edit Operator">
-                                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                                <button type="button" onclick="openEditOperatorModal('{{ $op->id }}', '{{ addslashes($op->name) }}', '{{ $op->vendor }}', '{{ $op->role }}', '{{ $op->whatsapp }}')" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-all active:scale-95 text-[10px] font-bold" title="Edit Operator">
+                                                    <i data-lucide="pencil" class="w-3.5 h-3.5 shrink-0"></i>
+                                                    <span>Edit</span>
                                                 </button>
 
                                                 <!-- Reset Google Link Button -->
                                                 @if($op->email)
-                                                    <form action="{{ route('operators.reset-email', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin melepas akun Google untuk operator {{ $op->name }}? Hal ini memungkinkan operator mendaftarkan ulang email Google mereka.');" class="inline">
+                                                    <form action="{{ route('operators.reset-email', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin melepas akun Google untuk operator {{ $op->name }}? Hal ini memungkinkan operator mendaftarkan ulang email Google mereka.');" class="inline-flex">
                                                         @csrf
-                                                        <button type="submit" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="Reset email terdaftar">
-                                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                                        <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all active:scale-95 text-[10px] font-bold" title="Reset email terdaftar">
+                                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 shrink-0"></i>
+                                                            <span>Reset Google</span>
                                                         </button>
                                                     </form>
                                                 @endif
 
                                                 <!-- Delete Button -->
-                                                <form action="{{ route('operators.destroy', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus operator {{ $op->name }}? Semua data laporan yang berkaitan akan tetap ada namun status operatornya diset menjadi null.');" class="inline">
+                                                <form action="{{ route('operators.destroy', $op->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus operator {{ $op->name }}? Semua data laporan yang berkaitan akan tetap ada namun status operatornya diset menjadi null.');" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin menghapus operator {{ $op->name }}?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition-colors" title="Hapus Operator">
-                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all active:scale-95 text-[10px] font-bold" title="Hapus Operator">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0"></i>
+                                                        <span>Hapus</span>
                                                     </button>
                                                 </form>
                                             </div>
