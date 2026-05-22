@@ -868,10 +868,10 @@
                             </div>
                             <div class="min-w-0">
                                 <h2 class="text-base font-bold font-outfit text-white">Form Laporan Hasil Produksi</h2>
-                                <p class="text-2xs text-slate-400">Pengisian data diverifikasi atas nama: <strong class="text-white">{{ session('operator_name') }} ({{ session('operator_vendor') }})</strong></p>
+                                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">Pengisian data diverifikasi atas nama: <strong class="text-white font-bold">{{ session('operator_name') }} ({{ session('operator_vendor') }})</strong></p>
                             </div>
                         </div>
-                        <span class="self-start sm:self-auto text-3xs bg-rose-500/20 text-rose-450 border border-rose-500/35 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 whitespace-nowrap">
+                        <span class="self-start sm:self-auto text-[9px] bg-rose-500/15 text-rose-450 border border-rose-500/25 font-black px-2 py-0.5 rounded-md uppercase tracking-widest shrink-0 whitespace-nowrap">
                             Wajib *
                         </span>
                     </div>
@@ -1109,7 +1109,7 @@
                                     <span class="absolute top-3 left-3 pointer-events-none text-slate-450">
                                         <i data-lucide="file-text" class="w-4 h-4"></i>
                                     </span>
-                                    <textarea name="keterangan" id="keterangan" required rows="2" placeholder="Tuliskan catatan kerja atau kendala (jika tidak ada kendala, tulis 'Lancar' or '-')" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
+                                    <textarea name="keterangan" id="keterangan" required rows="3" placeholder="Tulis catatan atau kendala kerja (jika tidak ada kendala, ketik 'Lancar')" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -1143,34 +1143,34 @@
 
                     <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
                         @forelse($reports as $report)
-                        <div class="p-3.5 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-white relative group">
+                        <div class="p-4 rounded-xl border border-slate-200/80 hover:border-slate-350 hover:shadow-md transition-all bg-white relative group">
                             
                             <!-- Badges & Action Toolbar -->
-                            <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    <span class="px-2 py-0.5 rounded text-3xs font-extrabold border border-slate-200 bg-slate-50 text-slate-700 uppercase">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border border-slate-200 bg-slate-50 text-slate-700 uppercase tracking-wider">
                                         {{ $report->shift }}
                                     </span>
                                     
                                     <!-- Dynamic status indicator -->
                                     @if($report->status == 'approved')
-                                        <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-bold uppercase">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
                                             Disetujui
                                         </span>
                                     @elseif($report->status == 'telat')
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-250 text-3xs font-bold uppercase flex items-center gap-1 shadow-sm">
-                                            <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat (Disetujui)
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-250 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                            <i data-lucide="clock" class="w-3 h-3"></i> Telat (Disetujui)
                                         </span>
                                     @elseif($report->status == 'pending_late')
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-250 text-3xs font-bold uppercase flex items-center gap-1 shadow-sm animate-pulse">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-250 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm animate-pulse">
                                             <span class="w-1 h-1 rounded-full bg-amber-500"></span> Telat (Menunggu ACC)
                                         </span>
                                     @elseif($report->status == 'rejected')
-                                        <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-3xs font-bold uppercase animate-pulse">
+                                        <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wider animate-pulse">
                                             Perlu Revisi
                                         </span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-3xs font-bold uppercase">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-250 text-[10px] font-bold uppercase tracking-wider">
                                             Menunggu
                                         </span>
                                     @endif
@@ -1178,51 +1178,41 @@
 
                                 <!-- Action Buttons for Pending/Rejected reports -->
                                 <div class="flex items-center gap-1.5">
-                                    <button onclick="editReport({{ json_encode($report) }})" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-3xs font-bold flex items-center gap-1">
+                                    <button onclick="editReport({{ json_encode($report) }})" class="px-2 py-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-[10px] font-bold flex items-center gap-1">
                                         <i data-lucide="edit-2" class="w-3 h-3"></i>
                                         <span>{{ $report->status === 'rejected' ? 'Revisi' : 'Edit' }}</span>
                                     </button>
-
-                                    @if($report->status !== 'approved' && $report->status !== 'telat')
-                                        <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini?')" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-1 rounded bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all" title="Hapus Laporan">
-                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                        </form>
-                                    @endif
                                 </div>
                             </div>
 
                             <!-- Core info -->
-                            <div class="space-y-1">
-                                <h4 class="text-xs font-bold text-slate-800">
+                            <div class="space-y-1.5">
+                                <h4 class="text-xs font-bold text-slate-800 leading-tight">
                                     {{ $report->produk_yang_dikerjakan }}
-                                    <span class="text-3xs text-slate-400 font-normal">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
+                                    <span class="block text-[10px] text-slate-400 font-medium mt-0.5">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
                                 </h4>
 
-                                <div class="flex items-center justify-between text-3xs text-slate-500 pt-1">
-                                    <div>
-                                        <span class="font-bold text-slate-700">Hasil:</span>
-                                        <span class="text-xs font-extrabold text-slate-800">{{ number_format($report->hasil) }}</span>
-                                        <span class="font-medium text-slate-450">{{ $report->satuan }}</span>
+                                <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 mt-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-medium text-slate-400">Hasil:</span>
+                                        <span class="text-xs font-black text-slate-800">{{ number_format($report->hasil) }}</span>
+                                        <span class="font-bold text-slate-500 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">{{ $report->satuan }}</span>
                                     </div>
-                                    <span class="font-mono text-slate-400">
+                                    <span class="font-mono text-slate-500 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded text-[10px]">
                                         {{ \Carbon\Carbon::parse($report->tanggal)->format('d/m/Y') }}
                                     </span>
                                 </div>
 
                                 @if($report->keterangan)
-                                <div class="mt-2 text-3xs text-slate-500 bg-slate-50 border border-slate-100 rounded p-1.5 italic font-outfit">
+                                <div class="mt-2 text-[11px] text-slate-550 bg-slate-50/50 border border-slate-100 rounded-lg p-2 italic leading-relaxed">
                                     "{{ $report->keterangan }}"
                                 </div>
                                 @endif
 
                                 @if($report->status === 'rejected' && $report->catatan_revisi)
-                                <div class="mt-2 p-2 rounded-lg bg-rose-50 border border-rose-100 text-3xs text-rose-800">
+                                <div class="mt-2 p-2.5 rounded-lg bg-rose-50 border border-rose-100 text-[10px] text-rose-800 leading-normal">
                                     <span class="font-bold flex items-center gap-1 text-rose-700 mb-0.5">
-                                        <i data-lucide="alert-circle" class="w-3 h-3 text-rose-600"></i>
+                                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-600"></i>
                                         Catatan Koordinator:
                                     </span>
                                     {{ $report->catatan_revisi }}

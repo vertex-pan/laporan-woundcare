@@ -55,7 +55,7 @@
         }
     </script>
 </head>
-<body class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-office-900">
+<body class="min-h-full flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950">
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <!-- Logo -->
         <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-500 to-indigo-500 items-center justify-center text-white shadow-xl mb-4">
@@ -65,8 +65,8 @@
         <p class="mt-1 text-sm text-slate-400">Sistem Pencatatan Hasil Produksi & Verifikasi Gaji</p>
     </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow-2xl rounded-2xl sm:px-10 border border-slate-700/10">
+    <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-7 px-6 sm:py-8 sm:px-10 shadow-2xl rounded-3xl border border-slate-200/60">
             
             <!-- Toast Notifications -->
             @if(session('success'))
@@ -116,20 +116,20 @@
                 <!-- Phone Input Block -->
                 <div id="phone-input-block" class="space-y-4">
                     <div class="space-y-1.5">
-                        <label for="whatsapp" class="text-xs font-bold text-slate-655 block">Nomor WhatsApp Terdaftar</label>
+                        <label for="whatsapp" class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Nomor WhatsApp Terdaftar</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
                                 <i data-lucide="phone" class="w-4.5 h-4.5"></i>
                             </span>
-                            <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 08123456789" value="{{ old('whatsapp') }}" class="pl-10 w-full rounded-xl border border-slate-350 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            <input type="text" name="whatsapp" id="whatsapp" required inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Contoh: 08123456789" value="{{ old('whatsapp') }}" class="pl-10 w-full rounded-xl border border-slate-350 py-3.5 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                         </div>
-                        <p class="text-3xs text-slate-500 leading-normal">Gunakan nomor WhatsApp aktif Anda yang sudah terdaftar di sistem.</p>
+                        <p class="text-[11px] text-slate-400 leading-normal mt-1.5">Gunakan nomor WhatsApp aktif Anda yang sudah terdaftar di sistem.</p>
                     </div>
 
                     <!-- Remember Me Checkbox -->
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-2 py-1">
                         <input id="remember_me" name="remember_me" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded cursor-pointer transition-all">
-                        <label for="remember_me" class="ml-2 block text-xs text-slate-650 cursor-pointer select-none font-semibold">Ingat Nomor Saya</label>
+                        <label for="remember_me" class="block text-xs text-slate-500 cursor-pointer select-none font-semibold">Ingat Nomor Saya</label>
                     </div>
 
                     <button type="button" id="btn-send-magic" onclick="requestMagicLink()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-office-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">
@@ -151,7 +151,7 @@
                         <p class="text-xs text-slate-555 leading-relaxed">
                             Kami telah mengirimkan link masuk aman ke nomor WhatsApp <strong id="sent-phone-display" class="text-slate-800"></strong>.
                         </p>
-                        <p class="text-2xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                        <p class="text-[11px] text-slate-400 leading-relaxed max-w-xs mx-auto">
                             Silakan buka aplikasi WhatsApp Anda, klik link masuk tersebut, dan Anda akan otomatis masuk ke dashboard ini.
                         </p>
                     </div>
@@ -161,7 +161,7 @@
                             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                             <span id="resend-text">Kirim Ulang Link</span>
                         </button>
-                        <button type="button" onclick="resetMagicLinkBlock()" class="w-full text-2xs font-semibold text-slate-500 hover:text-slate-700 hover:underline py-1">
+                        <button type="button" onclick="resetMagicLinkBlock()" class="w-full text-[11px] font-semibold text-slate-550 hover:text-slate-700 hover:underline py-1">
                             Ubah Nomor WhatsApp
                         </button>
                     </div>
