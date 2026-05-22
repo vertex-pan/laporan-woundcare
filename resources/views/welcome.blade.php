@@ -1348,14 +1348,28 @@
                     const selectedName = selectedRadio.value;
                     const dateInput = document.getElementById('tanggal');
                     if (!dateInput) return;
+
+                    const reportIdEl = document.getElementById('report_id');
+                    const currentEditingId = reportIdEl ? reportIdEl.value : '';
+                    const isEditMode = currentEditingId !== '';
+
+                    // Auto-adjust date picker based on selected shift BEFORE reading selectedDate (only if NOT in edit mode)
+                    if (!isEditMode) {
+                        const todayDateStr = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
+                        const yesterdayDateStr = "{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}";
+                        
+                        if (selectedName === 'Shift 3' || selectedName === 'Lembur Shift 2') {
+                            dateInput.value = yesterdayDateStr;
+                        } else {
+                            dateInput.value = todayDateStr;
+                        }
+                    }
+
                     const selectedDate = dateInput.value;
 
                     const warningEl = document.getElementById('shift-warning');
                     const warningTextEl = document.getElementById('shift-warning-text');
                     if (!warningEl || !warningTextEl) return;
-                    
-                    const reportIdEl = document.getElementById('report_id');
-                    const currentEditingId = reportIdEl ? reportIdEl.value : '';
 
                     // Check for duplicate submission (with mutually exclusive shift groups)
                     const shiftGroups = {
@@ -1422,7 +1436,6 @@
                     }
 
                     // In edit/revision mode, bypass time lock warnings
-                    const isEditMode = currentEditingId !== '';
                     if (isEditMode) {
                         warningEl.classList.add('hidden');
                         return;
@@ -1433,17 +1446,7 @@
                         return;
                     }
                     
-                    // Auto-adjust date picker based on selected shift (only if NOT in edit mode)
-                    if (!isEditMode) {
-                        const todayDateStr = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
-                        const yesterdayDateStr = "{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}";
-                        
-                        if (selectedName === 'Shift 3' || selectedName === 'Lembur Shift 2') {
-                            dateInput.value = yesterdayDateStr;
-                        } else {
-                            dateInput.value = todayDateStr;
-                        }
-                    }
+                    // Date auto-adjustment is now performed at the top of the function prior to reading selectedDate
                     
                     const hr = serverTime.getHours();
                     const mn = serverTime.getMinutes();

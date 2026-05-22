@@ -66,9 +66,8 @@ class SendShiftReminders extends Command
         foreach ($shiftsToRemind as $shiftName) {
             $this->info("Processing reminders for Shift: {$shiftName}, Date: {$targetDate}");
 
-            // 1. Get IDs of operators who ALREADY submitted a report for this shift and date
-            $submittedOperatorIds = WoundReport::where('shift', $shiftName)
-                ->where('tanggal', $targetDate)
+            // 1. Get IDs of operators who ALREADY submitted any report for this target date
+            $submittedOperatorIds = WoundReport::where('tanggal', $targetDate)
                 ->pluck('operator_id')
                 ->filter()
                 ->unique()
