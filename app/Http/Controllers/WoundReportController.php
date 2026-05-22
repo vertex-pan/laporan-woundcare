@@ -488,6 +488,9 @@ class WoundReportController extends Controller
                     // Set title (max 31 characters)
                     $sheet->setTitle(substr($monthYear, 0, 31));
                     
+                    // Color the sheet tab accent to match the purple theme
+                    $sheet->getTabColor()->setARGB('FF4C1F7A');
+                    
                     // Freeze first row so header remains visible on scroll
                     $sheet->freezePane('A2');
                     
@@ -571,6 +574,15 @@ class WoundReportController extends Controller
                         $sheet->getStyle('F2:F' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                         $sheet->getStyle('K2:K' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                         $sheet->getStyle('M2:M' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        
+                        // Apply professional padding/indent for left-aligned columns (Prevent text touching lines)
+                        $leftAlignedCols = ['A', 'B', 'E', 'G', 'H', 'I', 'L'];
+                        foreach ($leftAlignedCols as $col) {
+                            $sheet->getStyle($col . '2:' . $col . ($row - 1))->getAlignment()->setIndent(1);
+                        }
+                        
+                        // Apply standard Excel Auto-Filter dropdown arrows
+                        $sheet->setAutoFilter('A1:M' . ($row - 1));
                         
                         // Vertically align all data rows to center
                         $sheet->getStyle('A2:M' . ($row - 1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
