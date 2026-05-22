@@ -1036,6 +1036,9 @@
             </div>
 
             <script>
+                // Map of submitted report keys passed from backend: { 'date|shift': report_id }
+                const submittedKeys = @json($submittedKeys ?? []);
+
                 // Highlight active radio card
                 function updateRadioStyles() {
                     const cards = document.querySelectorAll('.radio-card');
@@ -1336,9 +1339,6 @@
                         }
                     }
                 }
-
-                // Map of submitted report keys passed from backend: { 'date|shift': report_id }
-                const submittedKeys = @json($submittedKeys ?? []);
 
                 // Validate if selected shift is active based on server time & duplicate submissions
                 function validateShiftSelection() {
