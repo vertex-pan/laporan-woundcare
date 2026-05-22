@@ -229,6 +229,9 @@ class WoundReportController extends Controller
     public function approve(Request $request, $id)
     {
         if (session('operator_role') !== 'coordinator') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Hanya koordinator yang dapat menyetujui laporan.'], 403);
+            }
             return redirect()->back()->withErrors('Hanya koordinator yang dapat menyetujui laporan.');
         }
 
@@ -239,12 +242,23 @@ class WoundReportController extends Controller
             'catatan_revisi' => null
         ]);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan dari ' . $report->operator . ' disetujui.',
+                'new_status' => $newStatus
+            ]);
+        }
+
         return redirect()->route('dashboard')->with('success', 'Laporan dari ' . $report->operator . ' disetujui.');
     }
 
     public function reject(Request $request, $id)
     {
         if (session('operator_role') !== 'coordinator') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Hanya koordinator yang dapat menolak laporan.'], 403);
+            }
             return redirect()->back()->withErrors('Hanya koordinator yang dapat menolak laporan.');
         }
 
@@ -275,6 +289,14 @@ class WoundReportController extends Controller
             }
         }
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan dari ' . $report->operator . ' ditolak untuk direvisi.',
+                'new_status' => 'rejected'
+            ]);
+        }
+
         return redirect()->route('dashboard')->with('success', 'Laporan dari ' . $report->operator . ' ditolak untuk direvisi.');
     }
 
@@ -285,11 +307,21 @@ class WoundReportController extends Controller
         // Security check: staff can only delete their own pending/rejected reports
         if (session('operator_role') !== 'coordinator') {
             if ($report->operator_id !== session('operator_id') || $report->status === 'approved') {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Anda tidak memiliki wewenang untuk menghapus laporan ini.'], 403);
+                }
                 return redirect()->back()->withErrors('Anda tidak memiliki wewenang untuk menghapus laporan ini.');
             }
         }
 
         $report->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan pengerjaan berhasil dihapus.'
+            ]);
+        }
 
         return redirect()->route('dashboard')->with('success', 'Laporan pengerjaan berhasil dihapus.');
     }

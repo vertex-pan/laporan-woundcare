@@ -267,27 +267,27 @@
                 <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
                     <span class="text-[10px] font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
                     <h3 class="text-2xl font-bold font-outfit text-amber-800 mt-1">
-                        {{ $reports->whereIn('status', ['pending', 'pending_late'])->count() }}
+                        <span id="stats-count-pending">{{ $reports->whereIn('status', ['pending', 'pending_late'])->count() }}</span>
                         <span class="text-xs font-semibold text-amber-500">laporan</span>
                     </h3>
                     <span class="text-[10px] text-amber-600 block mt-1 leading-normal">Harus diverifikasi oleh Koordinator</span>
                 </div>
-
+ 
                 <!-- Widget 3: Approved -->
                 <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden">
                     <span class="text-[10px] font-extrabold uppercase text-emerald-600 tracking-wider block">Telah Disetujui</span>
                     <h3 class="text-2xl font-bold font-outfit text-emerald-800 mt-1">
-                        {{ $reports->where('status', 'approved')->count() }}
+                        <span id="stats-count-approved">{{ $reports->whereIn('status', ['approved', 'telat'])->count() }}</span>
                         <span class="text-xs font-semibold text-emerald-500">laporan</span>
                     </h3>
                     <span class="text-[10px] text-emerald-600 block mt-1 leading-normal">Laporan terverifikasi & masuk rekapan</span>
                 </div>
-
+ 
                 <!-- Widget 4: Rejected -->
                 <div class="bg-rose-50/45 p-4 rounded-xl border border-rose-200 shadow-sm relative overflow-hidden">
                     <span class="text-[10px] font-extrabold uppercase text-rose-600 tracking-wider block">Ditolak / Perlu Revisi</span>
                     <h3 class="text-2xl font-bold font-outfit text-rose-800 mt-1">
-                        {{ $reports->where('status', 'rejected')->count() }}
+                        <span id="stats-count-rejected">{{ $reports->where('status', 'rejected')->count() }}</span>
                         <span class="text-xs font-semibold text-rose-500">laporan</span>
                     </h3>
                     <span class="text-[10px] text-rose-600 block mt-1 leading-normal">Laporan dikembalikan ke Operator</span>
@@ -385,9 +385,9 @@
                     <span class="text-xs font-medium text-slate-300">Menampilkan {{ $reports->count() }} data</span>
                 </div>
 
-                <div class="divide-y divide-slate-100">
+                <div id="verification-queue-list" class="divide-y divide-slate-100">
                     @forelse($reports as $report)
-                    <div class="p-4 sm:p-5 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4">
+                    <div id="report-row-{{ $report->id }}" data-status="{{ $report->status }}" class="p-4 sm:p-5 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4">
                         
                         <!-- Report Info -->
                         <div class="space-y-2.5 flex-1 min-w-0">
@@ -399,28 +399,30 @@
                                     {{ $report->vendor }}
                                 </span>
                                 
-                                <!-- Status Badge -->
-                                @if($report->status == 'approved')
-                                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
-                                    </span>
-                                @elseif($report->status == 'telat')
-                                    <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-[10px] font-bold border border-emerald-600/20 flex items-center gap-1">
-                                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan (Disetujui)
-                                    </span>
-                                @elseif($report->status == 'pending_late')
-                                    <span class="px-2 py-0.5 rounded bg-amber-600/10 text-amber-700 text-[10px] font-bold border border-amber-600/20 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Telat (Menunggu ACC)
-                                    </span>
-                                @elseif($report->status == 'rejected')
-                                    <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-[10px] font-bold border border-rose-500/20 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
-                                    </span>
-                                @else
-                                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[10px] font-bold border border-amber-500/20 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
-                                    </span>
-                                @endif
+                                <!-- Status Badge Container -->
+                                <div id="status-badge-{{ $report->id }}" class="inline-block">
+                                    @if($report->status == 'approved')
+                                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
+                                        </span>
+                                    @elseif($report->status == 'telat')
+                                        <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-[10px] font-bold border border-emerald-600/20 flex items-center gap-1">
+                                            <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan (Disetujui)
+                                        </span>
+                                    @elseif($report->status == 'pending_late')
+                                        <span class="px-2 py-0.5 rounded bg-amber-600/10 text-amber-700 text-[10px] font-bold border border-amber-600/20 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Telat (Menunggu ACC)
+                                        </span>
+                                    @elseif($report->status == 'rejected')
+                                        <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-[10px] font-bold border border-rose-500/20 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[10px] font-bold border border-amber-500/20 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
                             <h3 class="text-sm font-bold text-slate-800 leading-tight">
@@ -457,20 +459,23 @@
                                 </div>
                             @endif
 
-                            @if($report->status == 'rejected' && $report->catatan_revisi)
-                                <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2 max-w-xl leading-normal">
-                                    <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
-                                    <div>
-                                        <span class="font-bold">Alasan Penolakan:</span> {{ $report->catatan_revisi }}
+                            <!-- Rejection Note Container -->
+                            <div id="rejection-note-{{ $report->id }}">
+                                @if($report->status == 'rejected' && $report->catatan_revisi)
+                                    <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2 max-w-xl leading-normal mt-2.5">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
+                                        <div>
+                                            <span class="font-bold">Alasan Penolakan:</span> {{ $report->catatan_revisi }}
+                                        </div>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
 
                         <!-- Actions (Approve/Reject) -->
-                        <div class="flex flex-wrap md:flex-col items-stretch justify-end gap-2 shrink-0 w-full md:w-44">
+                        <div id="action-buttons-{{ $report->id }}" class="flex flex-wrap md:flex-col items-stretch justify-end gap-2 shrink-0 w-full md:w-44">
                             @if($report->status === 'pending' || $report->status === 'pending_late')
-                                <form action="{{ route('wound-reports.approve', $report->id) }}" method="POST" class="w-full">
+                                <form action="{{ route('wound-reports.approve', $report->id) }}" method="POST" onsubmit="approveReportAjax(event, {{ $report->id }}, '{{ route('wound-reports.approve', $report->id) }}')" class="w-full">
                                     @csrf
                                     <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98]">
                                         <i data-lucide="check" class="w-4 h-4"></i>
@@ -478,14 +483,19 @@
                                     </button>
                                 </form>
 
-                                <button onclick="openRejectDialog({{ $report->id }}, '{{ $report->operator }}', '{{ $report->produk_yang_dikerjakan }}')" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98]">
+                                <button type="button"
+                                        data-report-id="{{ $report->id }}"
+                                        data-operator-name="{{ $report->operator }}"
+                                        data-product-name="{{ $report->produk_yang_dikerjakan }}"
+                                        onclick="openRejectDialog(this)"
+                                        class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98]">
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                     <span>Tolak / Minta Revisi</span>
                                 </button>
                             @endif
 
                             <!-- Delete Option -->
-                            <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini secara permanen dari database?')" class="w-full">
+                            <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="deleteReportAjax(event, {{ $report->id }}, '{{ route('wound-reports.destroy', $report->id) }}')" class="w-full">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-500 text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
@@ -518,7 +528,7 @@
                         <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-450"></i>
                         <h3 class="font-bold font-outfit">Tolak Laporan & Minta Revisi</h3>
                     </div>
-                    <form id="rejectForm" method="POST" class="p-5 space-y-4">
+                    <form id="rejectForm" onsubmit="submitRejectFormAjax(event)" class="p-5 space-y-4">
                         @csrf
                         <div class="text-xs text-slate-600">
                             <p>Anda menolak laporan dari: <strong id="rejectOperatorName" class="text-slate-800"></strong></p>
@@ -595,20 +605,375 @@
             </div>
 
             <script>
-                function openRejectDialog(reportId, operatorName, productName) {
+                let currentRejectReportId = null;
+
+                function openRejectDialog(btn) {
+                    const reportId = btn.getAttribute('data-report-id');
+                    const operatorName = btn.getAttribute('data-operator-name');
+                    const productName = btn.getAttribute('data-product-name');
+
                     const modal = document.getElementById('rejectModal');
-                    const form = document.getElementById('rejectForm');
-                    
-                    form.action = `/wound-reports/${reportId}/reject`;
+                    currentRejectReportId = reportId;
                     document.getElementById('rejectOperatorName').textContent = operatorName;
                     document.getElementById('rejectProductName').textContent = productName;
-                    
                     modal.classList.remove('hidden');
                 }
 
                 function closeRejectDialog() {
                     document.getElementById('rejectModal').classList.add('hidden');
                     document.getElementById('catatan_revisi').value = '';
+                    currentRejectReportId = null;
+                }
+
+                function submitRejectFormAjax(e) {
+                    e.preventDefault();
+                    if (!currentRejectReportId) return;
+
+                    const catatanRevisi = document.getElementById('catatan_revisi').value;
+                    if (!catatanRevisi.trim()) {
+                        alert('Tolong tulis catatan revisi.');
+                        return;
+                    }
+
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Memproses...</span>';
+                    if (window.lucide) lucide.createIcons();
+
+                    fetch(`/wound-reports/${currentRejectReportId}/reject`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            catatan_revisi: catatanRevisi
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+
+                        if (data.success) {
+                            const reportId = currentRejectReportId;
+                            closeRejectDialog();
+                            updateStatsAndCardState(reportId, data.new_status, data.message, catatanRevisi);
+                        } else {
+                            showToastNotification('error', data.message || 'Terjadi kesalahan.');
+                        }
+                    })
+                    .catch(error => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+                        console.error('Error rejecting:', error);
+                        showToastNotification('error', 'Gagal mengirim penolakan.');
+                    });
+                }
+
+                function approveReportAjax(e, reportId, url) {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i>';
+                    if (window.lucide) lucide.createIcons();
+
+                    fetch(`/wound-reports/${reportId}/approve`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+
+                        if (data.success) {
+                            updateStatsAndCardState(reportId, data.new_status, data.message);
+                        } else {
+                            showToastNotification('error', data.message || 'Gagal menyetujui laporan.');
+                        }
+                    })
+                    .catch(error => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+                        console.error('Error approving:', error);
+                        showToastNotification('error', 'Gagal menghubungkan ke server.');
+                    });
+                }
+
+                function deleteReportAjax(e, reportId, url) {
+                    e.preventDefault();
+                    if (!confirm('Apakah Anda yakin ingin menghapus data laporan ini secara permanen dari database?')) {
+                        return;
+                    }
+
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i>';
+                    if (window.lucide) lucide.createIcons();
+
+                    fetch(`/wound-reports/${reportId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+
+                        if (data.success) {
+                            // Slide out the report row smoothly
+                            const row = document.getElementById(`report-row-${reportId}`);
+                            if (row) {
+                                const originalStatus = row.getAttribute('data-status');
+                                const pendingEl = document.getElementById('stats-count-pending');
+                                const approvedEl = document.getElementById('stats-count-approved');
+                                const rejectedEl = document.getElementById('stats-count-rejected');
+
+                                if (pendingEl && approvedEl && rejectedEl) {
+                                    let pendingVal = parseInt(pendingEl.textContent) || 0;
+                                    let approvedVal = parseInt(approvedEl.textContent) || 0;
+                                    let rejectedVal = parseInt(rejectedEl.textContent) || 0;
+
+                                    if (originalStatus === 'pending' || originalStatus === 'pending_late') {
+                                        pendingEl.textContent = Math.max(0, pendingVal - 1);
+                                    } else if (originalStatus === 'approved' || originalStatus === 'telat') {
+                                        approvedEl.textContent = Math.max(0, approvedVal - 1);
+                                    } else if (originalStatus === 'rejected') {
+                                        rejectedEl.textContent = Math.max(0, rejectedVal - 1);
+                                    }
+                                }
+
+                                row.style.transition = 'all 0.4s ease';
+                                row.style.opacity = '0';
+                                row.style.transform = 'scale(0.8)';
+                                setTimeout(() => {
+                                    row.remove();
+                                    checkVerificationQueueEmptyState();
+                                }, 400);
+                            }
+                            showToastNotification('success', data.message);
+                        } else {
+                            showToastNotification('error', data.message || 'Gagal menghapus laporan.');
+                        }
+                    })
+                    .catch(error => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (window.lucide) lucide.createIcons();
+                        console.error('Error deleting:', error);
+                        showToastNotification('error', 'Gagal menghubungkan ke server.');
+                    });
+                }
+
+                function updateStatsAndCardState(reportId, newStatus, message, notes = null) {
+                    const row = document.getElementById(`report-row-${reportId}`);
+                    if (!row) return;
+
+                    const originalStatus = row.getAttribute('data-status');
+                    if (originalStatus === newStatus) return;
+
+                    row.setAttribute('data-status', newStatus);
+
+                    // 1. Sync stat counts
+                    const pendingEl = document.getElementById('stats-count-pending');
+                    const approvedEl = document.getElementById('stats-count-approved');
+                    const rejectedEl = document.getElementById('stats-count-rejected');
+
+                    if (pendingEl && approvedEl && rejectedEl) {
+                        let pendingVal = parseInt(pendingEl.textContent) || 0;
+                        let approvedVal = parseInt(approvedEl.textContent) || 0;
+                        let rejectedVal = parseInt(rejectedEl.textContent) || 0;
+
+                        if (originalStatus === 'pending' || originalStatus === 'pending_late') {
+                            pendingVal = Math.max(0, pendingVal - 1);
+                        } else if (originalStatus === 'approved' || originalStatus === 'telat') {
+                            approvedVal = Math.max(0, approvedVal - 1);
+                        } else if (originalStatus === 'rejected') {
+                            rejectedVal = Math.max(0, rejectedVal - 1);
+                        }
+
+                        if (newStatus === 'approved' || newStatus === 'telat') {
+                            approvedVal++;
+                        } else if (newStatus === 'rejected') {
+                            rejectedVal++;
+                        } else if (newStatus === 'pending' || newStatus === 'pending_late') {
+                            pendingVal++;
+                        }
+
+                        pendingEl.textContent = pendingVal;
+                        approvedEl.textContent = approvedVal;
+                        rejectedEl.textContent = rejectedVal;
+                    }
+
+                    // 2. Sync status badge
+                    const badgeContainer = document.getElementById(`status-badge-${reportId}`);
+                    if (badgeContainer) {
+                        let badgeHtml = '';
+                        if (newStatus === 'approved') {
+                            badgeHtml = `
+                                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
+                                </span>
+                            `;
+                        } else if (newStatus === 'telat') {
+                            badgeHtml = `
+                                <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-[10px] font-bold border border-emerald-600/20 flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan (Disetujui)
+                                </span>
+                            `;
+                        } else if (newStatus === 'rejected') {
+                            badgeHtml = `
+                                <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-[10px] font-bold border border-rose-500/20 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
+                                </span>
+                            `;
+                        }
+
+                        badgeContainer.innerHTML = badgeHtml;
+                        if (window.lucide) lucide.createIcons();
+                    }
+
+                    // 3. Remove approve/reject options, leave only delete
+                    const actionButtons = document.getElementById(`action-buttons-${reportId}`);
+                    if (actionButtons) {
+                        actionButtons.innerHTML = `
+                            <form action="/wound-reports/${reportId}" method="POST" onsubmit="deleteReportAjax(event, ${reportId}, '/wound-reports/${reportId}')" class="w-full">
+                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-500 text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <span>Hapus Permanen</span>
+                                </button>
+                            </form>
+                        `;
+                        if (window.lucide) lucide.createIcons();
+                    }
+
+                    // 4. Update rejection note balloon
+                    const rejectionNoteContainer = document.getElementById(`rejection-note-${reportId}`);
+                    if (rejectionNoteContainer) {
+                        if (newStatus === 'rejected' && notes) {
+                            rejectionNoteContainer.innerHTML = `
+                                <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2 max-w-xl leading-normal mt-2.5">
+                                    <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
+                                    <div>
+                                        <span class="font-bold">Alasan Penolakan:</span> ${notes}
+                                    </div>
+                                </div>
+                            `;
+                            if (window.lucide) lucide.createIcons();
+                        } else {
+                            rejectionNoteContainer.innerHTML = '';
+                        }
+                    }
+
+                    showToastNotification('success', message);
+                }
+
+
+
+                function checkVerificationQueueEmptyState() {
+                    const list = document.getElementById('verification-queue-list');
+                    if (!list) return;
+
+                    const rows = list.querySelectorAll('[id^="report-row-"]');
+                    if (rows.length === 0) {
+                        list.innerHTML = `
+                            <div class="text-center py-16 space-y-3 text-slate-400">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400 border border-slate-200">
+                                    <i data-lucide="folder-open" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-700">Tidak ada laporan ditemukan</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Coba sesuaikan filter pencarian atau tunggu laporan masuk dari operator.</p>
+                                </div>
+                            </div>
+                        `;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+
+                function showToastNotification(type, message) {
+                    let container = document.getElementById('toast-container');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'toast-container';
+                        container.className = 'fixed top-5 right-5 z-[9999] space-y-3 max-w-sm w-full pointer-events-none px-4 sm:px-0';
+                        document.body.appendChild(container);
+                    }
+
+                    const toast = document.createElement('div');
+                    toast.className = 'bg-white rounded-xl border border-slate-200 p-4 shadow-2xl flex items-start justify-between gap-3 pointer-events-auto transform translate-y-[-20px] opacity-0 transition-all duration-300';
+                    
+                    let icon = 'check-circle';
+                    let iconColor = 'text-emerald-500 bg-emerald-50';
+                    if (type === 'error') {
+                        icon = 'alert-circle';
+                        iconColor = 'text-rose-500 bg-rose-50';
+                    }
+
+                    toast.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center shrink-0">
+                                <i data-lucide="${icon}" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">${type === 'success' ? 'Berhasil' : 'Kendala'}</p>
+                                <p class="text-2xs text-slate-500 leading-normal mt-0.5">${message}</p>
+                            </div>
+                        </div>
+                        <button class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-all shrink-0">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+
+                    container.appendChild(toast);
+                    if (window.lucide) lucide.createIcons();
+
+                    setTimeout(() => {
+                        toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+                        toast.classList.add('translate-y-0', 'opacity-100');
+                    }, 10);
+
+                    toast.querySelector('button').addEventListener('click', () => {
+                        dismissToast(toast);
+                    });
+
+                    setTimeout(() => {
+                        dismissToast(toast);
+                    }, 4000);
+                }
+
+                function dismissToast(toast) {
+                    if (!toast.parentNode) return;
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-[-20px]', 'opacity-0');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.remove();
+                        }
+                    }, 300);
                 }
 
                 function openEditOperatorModal(id, name, vendor, role, whatsapp) {
