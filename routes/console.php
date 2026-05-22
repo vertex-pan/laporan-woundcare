@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:send-shift-reminders')->everyMinute();
+Schedule::command('app:send-shift-summary')->everyMinute();
