@@ -177,6 +177,35 @@
         </div>
         @endif
         
+        <!-- Late PIN Generated Toast -->
+        @if(session('late_pin_generated'))
+        @php $generatedLate = session('late_pin_generated'); @endphp
+        <div id="latePinToast" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-250 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <i data-lucide="clock" class="w-6 h-6 animate-bounce"></i>
+                </div>
+                <div class="text-center sm:text-left">
+                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Akses Keterlambatan Berhasil Dibuat!</h4>
+                    <p class="text-xs text-slate-650 mt-1 leading-relaxed">
+                        Berikan PIN berikut kepada <strong class="text-slate-900 font-bold">{{ $generatedLate['operator_name'] }}</strong> untuk mengisi laporan terlambat.
+                    </p>
+                    <p class="text-[10px] text-amber-700 font-semibold mt-1">
+                        *PIN ini hanya berlaku sekali pakai dan akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generatedLate['expires_at'] }} WIB</strong> (1 jam dari sekarang).
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="bg-white border-2 border-amber-400 px-5 py-2.5 rounded-2xl shadow-inner font-mono text-2xl font-black text-amber-600 tracking-widest select-all cursor-pointer" title="Klik untuk memblok PIN">
+                    {{ $generatedLate['pin'] }}
+                </div>
+                <button onclick="document.getElementById('latePinToast').remove()" class="p-2 hover:bg-amber-100 rounded-xl text-amber-700 transition-all shrink-0" title="Tutup">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        @endif
+        
         @if(session('success'))
         <div id="successToast" class="flex items-center justify-between p-4 mb-6 rounded-xl bg-emerald-50 border border-emerald-250 text-emerald-800 shadow-md">
             <div class="flex items-center gap-3">
@@ -280,7 +309,9 @@
                         <select name="status" class="w-full rounded-lg border border-slate-350 bg-white py-2 px-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary-500">
                             <option value="">Semua Status</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu)</option>
+                            <option value="pending_late" {{ request('status') == 'pending_late' ? 'selected' : '' }}>Pending Telat (Menunggu ACC)</option>
                             <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved (Disetujui)</option>
+                            <option value="telat" {{ request('status') == 'telat' ? 'selected' : '' }}>Disetujui Telat</option>
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
                         </select>
                     </div>
@@ -365,6 +396,10 @@
                                     <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-3xs font-bold border border-emerald-500/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
                                     </span>
+                                @elseif($report->status == 'telat')
+                                    <span class="px-2 py-0.5 rounded bg-amber-550/15 text-amber-650 text-3xs font-bold border border-amber-500/20 flex items-center gap-1">
+                                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan
+                                    </span>
                                 @elseif($report->status == 'rejected')
                                     <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-3xs font-bold border border-rose-500/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
@@ -406,7 +441,7 @@
 
                         <!-- Actions (Approve/Reject) -->
                         <div class="flex flex-wrap md:flex-col items-stretch justify-end gap-2 shrink-0 w-full md:w-44">
-                            @if($report->status === 'pending')
+                            @if($report->status === 'pending' || $report->status === 'pending_late')
                                 <form action="{{ route('wound-reports.approve', $report->id) }}" method="POST" class="w-full">
                                     @csrf
                                     <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all">
@@ -743,6 +778,14 @@
                                                     </button>
                                                 </form>
 
+                                                <!-- Generate Late PIN Button -->
+                                                <form action="{{ route('operators.generate-late-pin', $op->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Akses Keterlambatan untuk {{ $op->name }}? PIN ini akan aktif selama 1 jam.');">
+                                                    @csrf
+                                                    <button type="submit" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg border border-transparent hover:border-amber-200 transition-colors" title="Generate PIN Telat Laporan">
+                                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                                    </button>
+                                                </form>
+
                                                 <!-- Edit Button -->
                                                 <button type="button" onclick="openEditOperatorModal('{{ $op->id }}', '{{ addslashes($op->name) }}', '{{ $op->vendor }}', '{{ $op->role }}', '{{ $op->whatsapp }}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="Edit Operator">
                                                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
@@ -937,6 +980,41 @@
                                     <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5 animate-bounce"></i>
                                     <div id="shift-warning-text"></div>
                                 </div>
+
+                                <!-- Late PIN Input Wrapper -->
+                                <div id="late-pin-wrapper" class="hidden bg-amber-50/50 border border-amber-250 rounded-xl p-4 mt-3.5 space-y-3 shadow-sm transition-all duration-300">
+                                    <div class="flex items-start gap-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0 shadow-inner">
+                                            <i data-lucide="key-round" class="w-4 h-4 text-amber-600"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <h4 class="text-xs font-bold text-amber-950 font-outfit uppercase tracking-wider leading-none">Bypass Keterlambatan</h4>
+                                            <p class="text-2xs text-amber-800 mt-1 leading-relaxed">
+                                                Batas waktu pengisian shift reguler telah berakhir. Silakan minta <strong class="text-amber-900 font-bold">PIN Akses Keterlambatan</strong> 6-digit sekali pakai dari Koordinator Anda.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Heart-piercing Checkbox -->
+                                    <div class="bg-white/90 rounded-xl p-3 border border-amber-200/80 shadow-sm transition-all hover:bg-white duration-200">
+                                        <label class="flex items-start gap-2.5 cursor-pointer group">
+                                            <input type="checkbox" id="late_self_ack" class="mt-0.5 w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500/25 focus:ring-offset-0 focus:ring-2 transition-all cursor-pointer shrink-0">
+                                            <div class="text-left flex-1 min-w-0">
+                                                <span class="text-[9px] font-extrabold text-amber-850 uppercase tracking-widest block mb-1 leading-none">Komitmen Disiplin</span>
+                                                <span class="text-[10.5px] sm:text-xs text-slate-700 leading-relaxed group-hover:text-slate-900 transition-colors select-none font-semibold block italic">
+                                                    "Saya sadar telah lalai mengirim laporan tepat waktu. Saya berjanji untuk lebih disiplin menghargai waktu dan berkomitmen penuh tidak mengulangi keterlambatan ini lagi."
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-amber-600">
+                                            <i data-lucide="lock" class="w-4 h-4"></i>
+                                        </span>
+                                        <input type="text" name="late_bypass_pin" id="late_bypass_pin" placeholder="Masukkan 6-Digit PIN Koordinator" maxlength="6" autocomplete="off" class="pl-10 w-full rounded-lg border border-amber-250 py-2.5 px-3.5 text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-550 transition-all font-mono text-center tracking-widest font-bold cursor-not-allowed opacity-60" disabled>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1031,7 +1109,7 @@
                             <button type="button" onclick="clearForm()" class="order-2 sm:order-1 w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 hover:text-slate-700 transition-all active:scale-[0.98]">
                                 Reset Formulir
                             </button>
-                            <button type="submit" class="order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            <button type="submit" id="submit-report-btn" class="order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4"></i> Ajukan Laporan
                             </button>
                         </div>
@@ -1067,6 +1145,10 @@
                                         <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-bold uppercase">
                                             Disetujui
                                         </span>
+                                    @elseif($report->status == 'telat')
+                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-250 text-3xs font-bold uppercase flex items-center gap-1 shadow-sm">
+                                            <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan
+                                        </span>
                                     @elseif($report->status == 'rejected')
                                         <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-3xs font-bold uppercase animate-pulse">
                                             Perlu Revisi
@@ -1079,12 +1161,13 @@
                                 </div>
 
                                 <!-- Action Buttons for Pending/Rejected reports -->
+                                <div class="flex items-center gap-1.5">
                                     <button onclick="editReport({{ json_encode($report) }})" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-3xs font-bold flex items-center gap-1">
                                         <i data-lucide="edit-2" class="w-3 h-3"></i>
                                         <span>{{ $report->status === 'rejected' ? 'Revisi' : 'Edit' }}</span>
                                     </button>
 
-                                    @if($report->status !== 'approved')
+                                    @if($report->status !== 'approved' && $report->status !== 'telat')
                                         <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini?')" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -1560,14 +1643,44 @@
                         submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
 
+                    const lateWrapper = document.getElementById('late-pin-wrapper');
+
                     // In edit/revision mode, bypass time lock warnings
                     if (isEditMode) {
                         warningEl.classList.add('hidden');
+                        if (lateWrapper) {
+                            lateWrapper.classList.add('hidden');
+                            
+                            const ackCheckbox = document.getElementById('late_self_ack');
+                            const pinInput = document.getElementById('late_bypass_pin');
+                            
+                            if (ackCheckbox) {
+                                ackCheckbox.required = false;
+                                ackCheckbox.checked = false;
+                            }
+                            if (pinInput) {
+                                pinInput.disabled = false;
+                                pinInput.required = false;
+                                pinInput.value = '';
+                                pinInput.classList.remove('cursor-not-allowed', 'opacity-60', 'bg-slate-50');
+                                pinInput.classList.add('bg-white');
+                            }
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            submitBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Simpan Perubahan';
+                            submitBtn.className = 'order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2';
+                            lucide.createIcons();
+                        }
                         return;
                     }
                     
                     if (typeof serverTime === 'undefined' || !serverTime) {
                         warningEl.classList.add('hidden');
+                        if (lateWrapper) {
+                            lateWrapper.classList.add('hidden');
+                        }
                         return;
                     }
                     
@@ -1588,22 +1701,106 @@
                     const rules = config[selectedName];
                     if (!rules) {
                         warningEl.classList.add('hidden');
+                        if (lateWrapper) {
+                            lateWrapper.classList.add('hidden');
+                        }
                         return;
                     }
                     
                     const isAllowed = (currentTimeStr >= rules.start && currentTimeStr < rules.end);
                     
                     if (!isAllowed) {
-                        warningTextEl.innerHTML = `<strong>Perhatian:</strong> Jam pengisian untuk <strong>${selectedName}</strong> adalah pukul <strong>${rules.label}</strong>. Jam server saat ini <strong>${currentTimeStr}</strong>. Laporan ini tidak akan dapat dikirimkan.`;
+                        warningTextEl.innerHTML = `<strong>Perhatian:</strong> Jam pengisian untuk <strong>${selectedName}</strong> adalah pukul <strong>${rules.label}</strong>. Jam server saat ini <strong>${currentTimeStr}</strong>. Laporan ini tidak akan dapat dikirimkan secara reguler.`;
                         warningEl.classList.remove('hidden');
+                        
+                        // Show late PIN bypass field
+                        if (lateWrapper) {
+                            lateWrapper.classList.remove('hidden');
+                            
+                            const ackCheckbox = document.getElementById('late_self_ack');
+                            const pinInput = document.getElementById('late_bypass_pin');
+                            
+                            if (ackCheckbox) {
+                                ackCheckbox.required = true;
+                                
+                                if (ackCheckbox.checked) {
+                                    if (pinInput) {
+                                        pinInput.disabled = false;
+                                        pinInput.required = true;
+                                        pinInput.classList.remove('cursor-not-allowed', 'opacity-60', 'bg-slate-50');
+                                        pinInput.classList.add('bg-white');
+                                    }
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                    }
+                                } else {
+                                    if (pinInput) {
+                                        pinInput.disabled = true;
+                                        pinInput.required = false;
+                                        pinInput.value = '';
+                                        pinInput.classList.add('cursor-not-allowed', 'opacity-60', 'bg-slate-50');
+                                        pinInput.classList.remove('bg-white');
+                                    }
+                                    if (submitBtn) {
+                                        submitBtn.disabled = true;
+                                        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Change submit button styling to amber bypass mode
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i data-lucide="key-round" class="w-4 h-4"></i> Ajukan Laporan Terlambat';
+                            submitBtn.className = 'order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2';
+                            lucide.createIcons();
+                        }
                     } else {
                         warningEl.classList.add('hidden');
+                        
+                        // Hide late PIN bypass field
+                        if (lateWrapper) {
+                            lateWrapper.classList.add('hidden');
+                            
+                            const ackCheckbox = document.getElementById('late_self_ack');
+                            const pinInput = document.getElementById('late_bypass_pin');
+                            
+                            if (ackCheckbox) {
+                                ackCheckbox.required = false;
+                                ackCheckbox.checked = false;
+                            }
+                            if (pinInput) {
+                                pinInput.disabled = false; // reset disabled
+                                pinInput.required = false;
+                                pinInput.value = '';
+                                pinInput.classList.remove('cursor-not-allowed', 'opacity-60', 'bg-slate-50');
+                                pinInput.classList.add('bg-white');
+                            }
+                        }
+                        
+                        // Reset submit button styling to normal
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            submitBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> Ajukan Laporan';
+                            submitBtn.className = 'order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2';
+                            lucide.createIcons();
+                        }
                     }
                 }
 
                 // Run on page load
                 autoSelectActiveShift();
                 validateShiftSelection();
+
+                // Self-reflection acknowledgment interaction for late reports
+                const ackCheckbox = document.getElementById('late_self_ack');
+                if (ackCheckbox) {
+                    ackCheckbox.addEventListener('change', function() {
+                        validateShiftSelection();
+                    });
+                }
 
                 // ==========================================
                 // AUTO-DRAFT ENGINE & EVENT LISTENERS

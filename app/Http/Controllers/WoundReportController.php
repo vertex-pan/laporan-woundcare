@@ -139,12 +139,22 @@ class WoundReportController extends Controller
         }
 
         // 1. Strict time lock for Karyawan (bypassed for revisions)
+        $isLateSubmission = false;
         if ($role === 'karyawan' && !$isRevision) {
             $windowCheck = $this->checkShiftWindow($shiftName);
             if (!$windowCheck['allowed']) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors('Penguncian Waktu: ' . $windowCheck['reason']);
+                // If late, we verify the late bypass PIN from the coordinator
+                $cachedPin = \Illuminate\Support\Facades\Cache::get('late_pin_' . session('operator_id'));
+                $submittedPin = $request->input('late_bypass_pin');
+                
+                if (empty($submittedPin) || $submittedPin !== $cachedPin) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors('Penguncian Waktu: Batas waktu pengisian reguler telah ditutup. Silakan masukkan PIN Akses Keterlambatan 6-digit yang valid dari Koordinator Anda.');
+                }
+                
+                // PIN is valid! Set status directly to 'telat'
+                $isLateSubmission = true;
             }
         }
 
@@ -152,20 +162,37 @@ class WoundReportController extends Controller
         $validated['operator_id'] = session('operator_id');
         $validated['operator'] = session('operator_name');
         $validated['vendor'] = session('operator_vendor');
-        $validated['status'] = 'pending';
+        $validated['status'] = $isLateSubmission ? 'pending_late' : 'pending';
         $validated['catatan_revisi'] = null;
 
         // If editing an existing report
         if ($request->filled('report_id')) {
             $report = WoundReport::where('operator_id', session('operator_id'))
                 ->findOrFail($request->report_id);
+            
+            // If the report was originally pending_late, telat, or if it is a new late submission
+            $wasLate = in_array($report->status, ['pending_late', 'telat']);
+            if ($wasLate || $isLateSubmission) {
+                $validated['status'] = 'pending_late';
+            } else {
+                $validated['status'] = 'pending';
+            }
+
             $report->update($validated);
+            
+            if ($isLateSubmission) {
+                \Illuminate\Support\Facades\Cache::forget('late_pin_' . session('operator_id'));
+            }
             return redirect()->route('dashboard')->with('success', 'Laporan berhasil diperbarui.');
         }
 
         WoundReport::create($validated);
 
-        return redirect()->route('dashboard')->with('success', 'Laporan pengerjaan berhasil diajukan. Menunggu persetujuan Koordinator.');
+        if ($isLateSubmission) {
+            \Illuminate\Support\Facades\Cache::forget('late_pin_' . session('operator_id'));
+        }
+
+        return redirect()->route('dashboard')->with('success', $isLateSubmission ? 'Laporan keterlambatan berhasil diajukan. Menunggu persetujuan khusus Koordinator.' : 'Laporan pengerjaan berhasil diajukan. Menunggu persetujuan Koordinator.');
     }
 
     public function approve(Request $request, $id)
@@ -175,8 +202,9 @@ class WoundReportController extends Controller
         }
 
         $report = WoundReport::findOrFail($id);
+        $newStatus = ($report->status === 'pending_late') ? 'telat' : 'approved';
         $report->update([
-            'status' => 'approved',
+            'status' => $newStatus,
             'catatan_revisi' => null
         ]);
 
@@ -343,6 +371,29 @@ class WoundReportController extends Controller
             ]);
     }
 
+    public function generateLatePin($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        $operator = Operator::findOrFail($id);
+        
+        // Generate a 6-digit random PIN
+        $pin = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store in cache for 60 minutes (1 hour)
+        \Illuminate\Support\Facades\Cache::put('late_pin_' . $operator->id, $pin, now()->addMinutes(60));
+
+        return redirect()->back()->with('success', "PIN Keterlambatan berhasil dibuat untuk {$operator->name}.")
+            ->with('late_pin_generated', [
+                'operator_id' => $operator->id,
+                'operator_name' => $operator->name,
+                'pin' => $pin,
+                'expires_at' => now()->addMinutes(60)->format('H:i')
+            ]);
+    }
+
     public function export(Request $request)
     {
         if (session('operator_role') !== 'coordinator') {
@@ -439,7 +490,7 @@ class WoundReportController extends Controller
                         $report->hasil,
                         $report->satuan,
                         $report->keterangan,
-                        ucfirst($report->status)
+                        $report->status === 'telat' ? 'Telat Laporan' : ucfirst($report->status)
                     ], ';');
                 }
 
@@ -566,9 +617,11 @@ class WoundReportController extends Controller
                         $sheet->setCellValue('I' . $row, $report->produk_yang_dikerjakan);
                         // Cast to numeric for Excel calculations
                         $sheet->setCellValueExplicit('J' . $row, (int)$report->hasil, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
-                        $sheet->setCellValue('K' . $row, $report->satuan);
-                        $sheet->setCellValue('L' . $row, $report->keterangan);
-                        $sheet->setCellValue('M' . $row, ucfirst($report->status));
+                        if ($report->status === 'telat') {
+                            $sheet->setCellValue('M' . $row, 'Telat Laporan');
+                        } else {
+                            $sheet->setCellValue('M' . $row, ucfirst($report->status));
+                        }
                         
                         // Zebra Striping (ultra soft blue-gray for even rows on columns A-L)
                         if ($row % 2 === 0) {
@@ -578,7 +631,10 @@ class WoundReportController extends Controller
                         // Status styling with elegant pastel badges (Column M)
                         $statusCell = 'M' . $row;
                         $statusVal = strtolower($report->status);
-                        if ($statusVal === 'approved') {
+                        if ($statusVal === 'telat') {
+                            $sheet->getStyle($statusCell)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFE082'); // Amber Pastel background
+                            $sheet->getStyle($statusCell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFD84315'))->setBold(true); // Dark orange/amber text
+                        } elseif ($statusVal === 'approved') {
                             $sheet->getStyle($statusCell)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFE2F0D9');
                             $sheet->getStyle($statusCell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF385723'))->setBold(true);
                         } elseif ($statusVal === 'pending') {
