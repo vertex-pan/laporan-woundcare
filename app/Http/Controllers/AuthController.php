@@ -28,6 +28,110 @@ class AuthController extends Controller
         return view('auth.login', compact('coordinators', 'staffs', 'googleEnabled'));
     }
 
+    public function sendMagicLink(Request $request)
+    {
+        $request->validate([
+            'whatsapp' => 'required|string',
+        ]);
+
+        $phone = preg_replace('/[^0-9]/', '', $request->whatsapp);
+
+        if (empty($phone)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nomor WhatsApp tidak valid.'
+            ], 422);
+        }
+
+        // Standardize formats for lookup (matching suffix)
+        $corePhone = $phone;
+        if (str_starts_with($phone, '62')) {
+            $corePhone = substr($phone, 2);
+        } elseif (str_starts_with($phone, '0')) {
+            $corePhone = substr($phone, 1);
+        }
+
+        $operator = Operator::where(function($q) use ($phone, $corePhone) {
+            $q->where('whatsapp', $phone)
+              ->orWhere('whatsapp', 'like', '%' . $corePhone);
+        })->first();
+
+        if (!$operator) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nomor WhatsApp Anda belum terdaftar. Silakan hubungi Koordinator.'
+            ], 422);
+        }
+
+        // Generate temporary magic login token
+        $token = \Illuminate\Support\Str::random(40);
+        
+        // Cache the token to operator mapping for 10 minutes
+        \Illuminate\Support\Facades\Cache::put('magic_token_' . $token, $operator->id, now()->addMinutes(10));
+
+        // Construct magic link
+        $url = route('login.verify', ['token' => $token]);
+
+        // Send via Wablas
+        $wablas = new \App\Services\WablasService();
+        $message = "Halo *{$operator->name}*,\n\n"
+                 . "Berikut adalah link masuk aman Anda untuk Woundcare Dashboard (berlaku 10 menit):\n"
+                 . "{$url}\n\n"
+                 . "Silakan klik link di atas untuk masuk secara otomatis. Mohon tidak membagikan link ini kepada siapa pun.";
+
+        $result = $wablas->send($operator->whatsapp, $message);
+
+        if (!($result['status'] ?? false)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengirim pesan WhatsApp: ' . ($result['reason'] ?? 'Kesalahan API Wablas.')
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Link masuk berhasil dikirim ke WhatsApp Anda!'
+        ]);
+    }
+
+    public function verifyMagicLink(Request $request)
+    {
+        $token = $request->query('token');
+
+        if (empty($token)) {
+            return redirect()->route('login')->withErrors('Token verifikasi kosong.');
+        }
+
+        $operatorId = \Illuminate\Support\Facades\Cache::get('magic_token_' . $token);
+
+        if (!$operatorId) {
+            return redirect()->route('login')->withErrors('Link masuk tidak valid atau telah kadaluarsa (berlaku 10 menit). Silakan minta link baru.');
+        }
+
+        $operator = Operator::find($operatorId);
+
+        if (!$operator) {
+            return redirect()->route('login')->withErrors('Profil operator tidak ditemukan.');
+        }
+
+        // Remove token immediately to prevent reuse
+        \Illuminate\Support\Facades\Cache::forget('magic_token_' . $token);
+
+        // Set session
+        session([
+            'operator_id' => $operator->id,
+            'operator_name' => $operator->name,
+            'operator_vendor' => $operator->vendor,
+            'operator_role' => $operator->role,
+            'operator_whatsapp' => $operator->whatsapp,
+        ]);
+
+        // Queue secure remember cookie for 30 days (43200 minutes)
+        \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
+
+        return redirect()->route('dashboard')->with('success', 'Berhasil masuk sebagai ' . $operator->name);
+    }
+
     public function loginByPhone(Request $request)
     {
         $request->validate([
@@ -84,6 +188,9 @@ class AuthController extends Controller
             'operator_whatsapp' => $operator->whatsapp,
         ]);
 
+        // Queue secure remember cookie for 30 days (43200 minutes)
+        \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
+
         return redirect()->route('dashboard')->with('success', 'Berhasil masuk sebagai ' . $operator->name);
     }
 
@@ -114,6 +221,9 @@ class AuthController extends Controller
                     'operator_role' => $operator->role,
                     'operator_whatsapp' => $operator->whatsapp,
                 ]);
+
+                // Queue secure remember cookie for 30 days (43200 minutes)
+                \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
 
                 return redirect()->route('dashboard')->with('success', 'Berhasil masuk via Google sebagai ' . $operator->name);
             }
@@ -183,12 +293,19 @@ class AuthController extends Controller
             'operator_whatsapp' => $operator->whatsapp,
         ]);
 
+        // Queue secure remember cookie for 30 days (43200 minutes)
+        \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
+
         return redirect()->route('dashboard')->with('success', 'Akun Google berhasil dihubungkan. Selamat bekerja, ' . $operator->name . '!');
     }
 
     public function logout()
     {
         session()->forget(['operator_id', 'operator_name', 'operator_vendor', 'operator_role', 'operator_whatsapp']);
+        
+        // Delete secure remember cookie
+        \Illuminate\Support\Facades\Cookie::queue(\Illuminate\Support\Facades\Cookie::forget('remember_operator_id'));
+
         return redirect()->route('login')->with('success', 'Berhasil keluar dari sistem.');
     }
 }

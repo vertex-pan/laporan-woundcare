@@ -76,6 +76,15 @@
             </div>
             @endif
 
+            <!-- Client-side Dynamic Errors -->
+            <div id="client-error-container" class="hidden mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-250 text-rose-800 text-xs flex flex-col gap-1">
+                <div class="flex items-center gap-2 font-bold">
+                    <i data-lucide="alert-circle" class="w-4.5 h-4.5 text-rose-650"></i>
+                    <span id="client-error-title">Ada Kendala Masuk</span>
+                </div>
+                <p id="client-error-msg" class="text-2xs text-slate-600 pl-6.5 leading-relaxed"></p>
+            </div>
+
             @if($errors->any())
             <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-250 text-rose-800 text-xs flex flex-col gap-1">
                 <div class="flex items-center gap-2 font-bold">
@@ -103,30 +112,61 @@
             </div>
 
             <!-- WhatsApp Login Form -->
-            <form id="form-phone" action="{{ route('login.phone') }}" method="POST" class="space-y-4 hidden" onsubmit="saveRememberedPhone()">
-                @csrf
-                <div class="space-y-1.5">
-                    <label for="whatsapp" class="text-xs font-bold text-slate-655 block">Nomor WhatsApp Terdaftar</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
-                            <i data-lucide="phone" class="w-4.5 h-4.5"></i>
-                        </span>
-                        <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 08123456789" value="{{ old('whatsapp') }}" class="pl-10 w-full rounded-xl border border-slate-350 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+            <div id="form-phone" class="space-y-4 hidden">
+                <!-- Phone Input Block -->
+                <div id="phone-input-block" class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label for="whatsapp" class="text-xs font-bold text-slate-655 block">Nomor WhatsApp Terdaftar</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
+                                <i data-lucide="phone" class="w-4.5 h-4.5"></i>
+                            </span>
+                            <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 08123456789" value="{{ old('whatsapp') }}" class="pl-10 w-full rounded-xl border border-slate-350 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                        </div>
+                        <p class="text-3xs text-slate-500 leading-normal">Gunakan nomor WhatsApp aktif Anda yang sudah terdaftar di sistem.</p>
                     </div>
-                    <p class="text-3xs text-slate-500 leading-normal">Gunakan nomor WhatsApp aktif Anda yang sudah terdaftar di sistem.</p>
+
+                    <!-- Remember Me Checkbox -->
+                    <div class="flex items-center">
+                        <input id="remember_me" name="remember_me" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded cursor-pointer transition-all">
+                        <label for="remember_me" class="ml-2 block text-xs text-slate-650 cursor-pointer select-none font-semibold">Ingat Nomor Saya</label>
+                    </div>
+
+                    <button type="button" id="btn-send-magic" onclick="requestMagicLink()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-office-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Kirim Link Masuk</span>
+                    </button>
                 </div>
 
-                <!-- Remember Me Checkbox -->
-                <div class="flex items-center mt-2.5">
-                    <input id="remember_me" name="remember_me" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded cursor-pointer transition-all">
-                    <label for="remember_me" class="ml-2 block text-xs text-slate-650 cursor-pointer select-none font-semibold">Ingat Nomor Saya</label>
-                </div>
+                <!-- Magic Link Sent Verification Block -->
+                <div id="magic-sent-block" class="hidden text-center space-y-4 py-3.5">
+                    <div class="flex justify-center">
+                        <div class="relative flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 text-emerald-600">
+                            <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20 animate-ping"></span>
+                            <i data-lucide="message-square" class="w-7 h-7 text-emerald-600 animate-bounce"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 px-2">
+                        <h4 class="text-sm font-bold text-slate-850">Link Masuk Terkirim!</h4>
+                        <p class="text-xs text-slate-555 leading-relaxed">
+                            Kami telah mengirimkan link masuk aman ke nomor WhatsApp <strong id="sent-phone-display" class="text-slate-800"></strong>.
+                        </p>
+                        <p class="text-2xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                            Silakan buka aplikasi WhatsApp Anda, klik link masuk tersebut, dan Anda akan otomatis masuk ke dashboard ini.
+                        </p>
+                    </div>
 
-                <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-office-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Masuk Aplikasi</span>
-                </button>
-            </form>
+                    <div class="pt-2 flex flex-col gap-2">
+                        <button type="button" id="btn-resend-magic" onclick="requestMagicLink()" disabled class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-300 rounded-xl bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span id="resend-text">Kirim Ulang Link</span>
+                        </button>
+                        <button type="button" onclick="resetMagicLinkBlock()" class="w-full text-2xs font-semibold text-slate-500 hover:text-slate-700 hover:underline py-1">
+                            Ubah Nomor WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Google Sign-in Option -->
             <div id="form-google" class="space-y-4">
@@ -202,6 +242,132 @@
                     localStorage.removeItem('remembered_whatsapp');
                 }
             }
+        }
+
+        // Magic Link Logic
+        let cooldownTimer = null;
+        let cooldownSeconds = 0;
+
+        function showClientError(msg) {
+            const container = document.getElementById('client-error-container');
+            const msgEl = document.getElementById('client-error-msg');
+            if (container && msgEl) {
+                msgEl.innerText = msg;
+                container.classList.remove('hidden');
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function hideClientError() {
+            const container = document.getElementById('client-error-container');
+            if (container) {
+                container.classList.add('hidden');
+            }
+        }
+
+        function requestMagicLink() {
+            hideClientError();
+
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+
+            if (!phone) {
+                showClientError('Silakan masukkan nomor WhatsApp Anda.');
+                return;
+            }
+
+            // Save phone if remember me is checked
+            saveRememberedPhone();
+
+            const btnSend = document.getElementById('btn-send-magic');
+            const btnResend = document.getElementById('btn-resend-magic');
+            
+            // Show loading
+            if (btnSend) {
+                btnSend.disabled = true;
+                btnSend.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin shrink-0"></i> <span>Mengirim Link...</span>';
+                lucide.createIcons();
+            }
+            if (btnResend) {
+                btnResend.disabled = true;
+                btnResend.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin shrink-0"></i> <span>Mengirim...</span>';
+                lucide.createIcons();
+            }
+
+            fetch('/login/magic-link/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ whatsapp: phone })
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                if (res.status === 200) {
+                    // Success
+                    document.getElementById('phone-input-block').classList.add('hidden');
+                    document.getElementById('magic-sent-block').classList.remove('hidden');
+                    document.getElementById('sent-phone-display').innerText = phone;
+
+                    // Start cooldown
+                    startResendCooldown();
+                } else {
+                    // Error
+                    showClientError(res.body.message || 'Gagal mengirim link masuk. Silakan coba kembali.');
+                    resetButtons();
+                }
+            })
+            .catch(err => {
+                showClientError('Terjadi kesalahan jaringan. Silakan hubungi admin.');
+                resetButtons();
+            });
+        }
+
+        function resetButtons() {
+            const btnSend = document.getElementById('btn-send-magic');
+            if (btnSend) {
+                btnSend.disabled = false;
+                btnSend.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> <span>Kirim Link Masuk</span>';
+            }
+            const btnResend = document.getElementById('btn-resend-magic');
+            if (btnResend) {
+                btnResend.disabled = cooldownSeconds > 0;
+                btnResend.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span id="resend-text">Kirim Ulang Link</span>';
+            }
+            lucide.createIcons();
+        }
+
+        function resetMagicLinkBlock() {
+            document.getElementById('phone-input-block').classList.remove('hidden');
+            document.getElementById('magic-sent-block').classList.add('hidden');
+            resetButtons();
+            
+            // Stop cooldown timer
+            if (cooldownTimer) {
+                clearInterval(cooldownTimer);
+                cooldownSeconds = 0;
+            }
+        }
+
+        function startResendCooldown() {
+            cooldownSeconds = 60;
+            const btnResend = document.getElementById('btn-resend-magic');
+            const resendText = document.getElementById('resend-text');
+
+            if (cooldownTimer) clearInterval(cooldownTimer);
+
+            if (btnResend) btnResend.disabled = true;
+
+            cooldownTimer = setInterval(() => {
+                cooldownSeconds--;
+                if (cooldownSeconds <= 0) {
+                    clearInterval(cooldownTimer);
+                    if (btnResend) btnResend.disabled = false;
+                    if (resendText) resendText.innerText = 'Kirim Ulang Link';
+                } else {
+                    if (resendText) resendText.innerText = `Kirim Ulang Link (${cooldownSeconds}s)`;
+                }
+            }, 1000);
         }
 
         // Default tab selection logic:

@@ -7,6 +7,8 @@ use App\Http\Controllers\AuthController;
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login/phone', [AuthController::class, 'loginByPhone'])->name('login.phone');
+Route::post('/login/magic-link/send', [AuthController::class, 'sendMagicLink'])->name('login.magic-link.send');
+Route::get('/login/verify', [AuthController::class, 'verifyMagicLink'])->name('login.verify');
 Route::post('/login/bypass', [AuthController::class, 'loginBypass'])->name('login.bypass');
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
