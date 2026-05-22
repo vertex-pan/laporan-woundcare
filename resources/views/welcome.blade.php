@@ -128,6 +128,26 @@
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
+        @if(empty(session('operator_whatsapp')))
+        <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
+            <div class="flex items-start gap-3">
+                <div class="p-2 rounded-xl bg-amber-100 text-amber-850 shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 animate-bounce text-amber-600"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wide">Nomor WhatsApp Belum Terisi!</h4>
+                    <p class="text-xs text-amber-700 leading-relaxed mt-0.5">
+                        Anda belum mendaftarkan nomor WhatsApp aktif. Silakan lengkapi nomor WhatsApp Anda agar sistem dapat mengirimkan link masuk otomatis (magic link) serta notifikasi pengingat pengisian laporan dan info revisi jika ada kesalahan.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="openSettingsModal()" class="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95">
+                <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                <span>Isi Nomor WhatsApp</span>
+            </button>
+        </div>
+        @endif
+        
         <!-- Notifications / Toasts -->
         @if(session('success'))
         <div id="successToast" class="flex items-center justify-between p-4 mb-6 rounded-xl bg-emerald-50 border border-emerald-250 text-emerald-800 shadow-md">
@@ -1515,6 +1535,7 @@
                 <div class="space-y-1">
                     <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider">Vendor & Peran</span>
                     <p class="text-xs font-semibold text-slate-650 uppercase">{{ session('operator_vendor') }} &bull; {{ session('operator_role') == 'coordinator' ? 'Koordinator' : 'Karyawan' }}</p>
+                    <p class="text-3xs text-slate-400 leading-normal">Hubungi Koordinator jika terdapat kesalahan nama atau data profil Anda.</p>
                 </div>
                 
                 <hr class="border-slate-100 my-2">
@@ -1527,7 +1548,7 @@
                         </span>
                         <input type="text" name="whatsapp" id="settings_whatsapp" required placeholder="Contoh: 081234567890" value="{{ session('operator_whatsapp') }}" class="pl-10 w-full rounded-lg border border-slate-350 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                     </div>
-                    <p class="text-3xs text-slate-500 leading-normal">Penting: Masukkan nomor WA aktif Anda agar sistem dapat mengirimkan notifikasi revisi jika laporan ditolak oleh Koordinator.</p>
+                    <p class="text-3xs text-slate-500 leading-normal">Penting: Nomor WhatsApp aktif digunakan oleh sistem untuk mengirimkan link masuk otomatis (magic link) serta notifikasi pengingat pengisian laporan dan info revisi.</p>
                 </div>
 
                 <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-2">
