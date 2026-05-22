@@ -23,6 +23,9 @@ return new class extends Migration
             $table->text('keterangan');
             $table->string('vendor');
             $table->string('operator');
+            $table->foreignId('operator_id')->nullable()->constrained('operators')->onDelete('set null');
+            $table->string('status')->default('pending'); // pending, approved, rejected
+            $table->text('catatan_revisi')->nullable();
             $table->timestamps();
         });
     }

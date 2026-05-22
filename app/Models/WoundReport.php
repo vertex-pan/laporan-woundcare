@@ -17,5 +17,13 @@ class WoundReport extends Model
         'keterangan',
         'vendor',
         'operator',
+        'operator_id',
+        'status',
+        'catatan_revisi',
     ];
+
+    public function operatorRelation()
+    {
+        return $this->belongsTo(Operator::class, 'operator_id');
+    }
 }

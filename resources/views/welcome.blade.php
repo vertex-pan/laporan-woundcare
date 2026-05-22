@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Portal Admin Produksi - Loka Medical Systems</title>
+    <title>Dasbor Produksi - Woundcare</title>
     
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
                             200: '#bae6fd',
                             300: '#7dd3fc',
                             400: '#38bdf8',
-                            500: '#0ea5e9', // Sky blue
+                            500: '#0ea5e9',
                             600: '#0284c7',
                             700: '#0369a1',
                             800: '#075985',
@@ -48,20 +48,18 @@
                             600: '#334155',
                             750: '#1e293b',
                             800: '#1e293b',
-                            900: '#0f172a', // Deep corporate dark
+                            900: '#0f172a',
                         }
                     }
                 }
             }
         }
     </script>
-
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-
-        /* Custom scrollbar for history list */
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
         }
@@ -75,8 +73,6 @@
         .custom-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-
-        /* Radio Card transition */
         .radio-card {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -84,7 +80,7 @@
 </head>
 <body class="min-h-full flex flex-col text-slate-800">
 
-    <!-- Navbar Header -->
+    <!-- Header Navbar -->
     <header class="bg-office-900 text-white shadow-lg sticky top-0 z-30 shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -94,29 +90,44 @@
                         <i data-lucide="activity" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-sm font-semibold tracking-wider text-slate-400 block uppercase leading-none font-outfit">Loka Medical</span>
-                        <h1 class="text-base font-extrabold font-outfit tracking-tight text-white leading-tight">Portal Admin Produksi</h1>
+                        <span class="text-sm font-semibold tracking-wider text-slate-400 block uppercase leading-none font-outfit">Woundcare</span>
+                        <h1 class="text-base font-extrabold font-outfit tracking-tight text-white leading-tight">Woundcare Dashboard</h1>
                     </div>
                 </div>
                 
-                <!-- Status Info -->
-                <div class="flex items-center gap-3">
-                    <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-350">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Sistem Aktif
-                    </span>
-                    <span class="text-xs font-medium text-slate-400 bg-slate-800/50 px-2.5 py-1 rounded border border-slate-800">Mobile-Optimized</span>
+                <!-- Logged In Operator & Logout -->
+                <div class="flex items-center gap-4">
+                    @if(session('operator_role') === 'karyawan')
+                    <div id="countdown-header" class="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/50 text-[10px] sm:text-[11px] font-semibold shrink-0">
+                        <i id="countdown-icon" data-lucide="timer" class="w-3.5 h-3.5 text-amber-400 animate-pulse"></i>
+                        <span id="countdown-text" class="text-slate-350">Memuat...</span>
+                    </div>
+                    @endif
+
+                    <div class="hidden sm:flex flex-col text-right">
+                        <span class="text-xs font-bold text-white">{{ session('operator_name') }}</span>
+                        <span class="text-2xs text-slate-450 uppercase tracking-widest font-semibold">
+                            {{ session('operator_vendor') }} &bull; {{ session('operator_role') == 'coordinator' ? 'Koordinator' : 'Karyawan' }}
+                        </span>
+                    </div>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md active:scale-95">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                            <span>Keluar</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Panel -->
+    <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         <!-- Notifications / Toasts -->
         @if(session('success'))
-        <div id="successToast" class="flex items-center justify-between p-4 mb-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-md animate-fade-in">
+        <div id="successToast" class="flex items-center justify-between p-4 mb-6 rounded-xl bg-emerald-50 border border-emerald-250 text-emerald-800 shadow-md">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
                     <i data-lucide="check-circle" class="w-5 h-5"></i>
@@ -130,13 +141,13 @@
         @endif
 
         @if($errors->any())
-        <div id="errorToast" class="p-4 mb-6 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 shadow-md">
+        <div id="errorToast" class="p-4 mb-6 rounded-xl bg-rose-50 border border-rose-250 text-rose-800 shadow-md">
             <div class="flex items-center justify-between mb-2 border-b border-rose-200/50 pb-2">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-600 flex items-center justify-center shrink-0">
                         <i data-lucide="alert-circle" class="w-5 h-5"></i>
                     </div>
-                    <p class="text-sm font-bold">Terjadi Kesalahan Input</p>
+                    <p class="text-sm font-bold">Terjadi Kendala</p>
                 </div>
                 <button onclick="document.getElementById('errorToast').remove()" class="p-1 hover:bg-rose-100 rounded-lg text-rose-600 transition-all shrink-0">
                     <i data-lucide="x" class="w-4 h-4"></i>
@@ -150,488 +161,560 @@
         </div>
         @endif
 
-        <!-- Grid Layout: Form and Logs/Stats -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- DUAL-ROLE CONTENT SWITCH -->
+        @if(session('operator_role') === 'coordinator')
             
-            <!-- Left Side: Interactive Input Form (Takes 7 cols on desktop) -->
-            <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
-                
-                <!-- Card Header -->
-                <div class="bg-office-750 text-white p-5 flex items-center justify-between border-b border-slate-200">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-primary-500/10 text-primary-400 flex items-center justify-center">
-                            <i data-lucide="edit-3" class="w-4.5 h-4.5"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-base font-bold font-outfit text-white">Input Laporan Harian</h2>
-                            <p class="text-2xs text-slate-400">Silakan isi seluruh parameter produksi berikut dengan benar</p>
-                        </div>
-                    </div>
-                    <span class="text-3xs bg-rose-500/20 text-rose-450 border border-rose-500/35 font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                        Wajib Diisi *
-                    </span>
+            <!-- ========================================== -->
+            <!-- COORDINATOR / ADMIN DASHBOARD VIEW         -->
+            <!-- ========================================== -->
+            
+            <!-- Stats Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Widget 1: Total Volume -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider block">Total Volume Hari Ini</span>
+                    <h3 class="text-2xl font-bold font-outfit text-slate-800 mt-1">
+                        {{ number_format($reports->sum('hasil')) }}
+                        <span class="text-2xs font-medium text-slate-400">PCS / unit</span>
+                    </h3>
+                    <span class="text-3xs text-slate-450 block mt-1">Dari total data yang terfilter</span>
                 </div>
 
-                <!-- Form Body -->
-                <form id="productionForm" action="{{ route('wound-reports.store') }}" method="POST" class="p-5 sm:p-6 space-y-5">
-                    @csrf
+                <!-- Widget 2: Pending Approval -->
+                <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
+                    <span class="text-3xs font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
+                    <h3 class="text-2xl font-bold font-outfit text-amber-800 mt-1">
+                        {{ $reports->where('status', 'pending')->count() }}
+                        <span class="text-2xs font-medium text-amber-500">laporan</span>
+                    </h3>
+                    <span class="text-3xs text-amber-600 block mt-1">Harus diverifikasi oleh Mba Ella / Hana</span>
+                </div>
 
-                    <!-- SECTION 1: Waktu & Shift -->
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
-                        <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
-                            <i data-lucide="clock" class="w-4 h-4 text-primary-600"></i>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Detail Waktu & Shift</h3>
+                <!-- Widget 3: Approved -->
+                <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden">
+                    <span class="text-3xs font-extrabold uppercase text-emerald-600 tracking-wider block">Telah Disetujui</span>
+                    <h3 class="text-2xl font-bold font-outfit text-emerald-800 mt-1">
+                        {{ $reports->where('status', 'approved')->count() }}
+                        <span class="text-2xs font-medium text-emerald-500">laporan</span>
+                    </h3>
+                    <span class="text-3xs text-emerald-600 block mt-1">Laporan terverifikasi & masuk rekapan</span>
+                </div>
+
+                <!-- Widget 4: Rejected -->
+                <div class="bg-rose-50/45 p-4 rounded-xl border border-rose-200 shadow-sm relative overflow-hidden">
+                    <span class="text-3xs font-extrabold uppercase text-rose-600 tracking-wider block">Ditolak / Perlu Revisi</span>
+                    <h3 class="text-2xl font-bold font-outfit text-rose-800 mt-1">
+                        {{ $reports->where('status', 'rejected')->count() }}
+                        <span class="text-2xs font-medium text-rose-500">laporan</span>
+                    </h3>
+                    <span class="text-3xs text-rose-600 block mt-1">Laporan dikembalikan ke Operator</span>
+                </div>
+            </div>
+
+            <!-- Filters Dashboard -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+                <form action="{{ route('dashboard') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">Status Laporan</label>
+                        <select name="status" class="w-full rounded-lg border border-slate-350 bg-white py-2 px-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu)</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved (Disetujui)</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">Nama Operator</label>
+                        <select name="operator_filter" class="w-full rounded-lg border border-slate-350 bg-white py-2 px-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                            <option value="">Semua Operator</option>
+                            @foreach($allOperators as $op)
+                                <option value="{{ $op->id }}" {{ request('operator_filter') == $op->id ? 'selected' : '' }}>{{ $op->name }} ({{ $op->vendor }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">Pencarian Kata Kunci</label>
+                        <div class="relative">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari produk, keterangan..." class="w-full rounded-lg border border-slate-350 bg-white py-2 pl-7 pr-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                            <i data-lucide="search" class="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
                         </div>
+                    </div>
 
-                        <!-- Date input wrapper -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-650 flex items-center gap-1.5">
-                                Tanggal <span class="text-rose-500">*</span>
-                                <span class="text-3xs font-medium text-slate-400 uppercase tracking-wider">(Date)</span>
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <div class="flex gap-2">
+                        <button type="submit" class="w-full py-2 px-4 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md transition-all">
+                            Filter Data
+                        </button>
+                        <a href="{{ route('dashboard') }}" class="py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-500 font-bold text-xs flex items-center justify-center">
+                            Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Verification Queue List -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-office-750 text-white p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-primary-400"></i>
+                        <h2 class="font-bold font-outfit text-white">Panel Verifikasi Laporan Kerja Karyawan</h2>
+                    </div>
+                    <span class="text-2xs font-medium text-slate-300">Menampilkan {{ $reports->count() }} data</span>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    @forelse($reports as $report)
+                    <div class="p-4 sm:p-5 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        
+                        <!-- Report Info -->
+                        <div class="space-y-2 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-3xs font-extrabold uppercase border {{ $report->shift == 'Shift 1' ? 'bg-sky-50 text-sky-700 border-sky-200' : ($report->shift == 'Shift 2' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-purple-50 text-purple-700 border-purple-200') }}">
+                                    {{ $report->shift }}
                                 </span>
-                                <input type="date" name="tanggal" required class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ date('Y-m-d') }}">
-                            </div>
-                        </div>
-
-                        <!-- Touch-friendly Shift Radio Cards -->
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-slate-650 block">Shift Kerja <span class="text-rose-500">*</span></label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                <span class="px-2 py-0.5 rounded bg-primary-50 text-primary-750 border border-primary-100 text-3xs font-extrabold uppercase">
+                                    {{ $report->vendor }}
+                                </span>
                                 
-                                <label class="relative flex items-center gap-3 p-3 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="shift" value="Shift 1" checked class="sr-only peer" onchange="updateRadioStyles()">
-                                    <div class="w-4.5 h-4.5 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <div class="text-left leading-none">
-                                        <span class="text-xs font-bold text-slate-800 block">Shift 1</span>
-                                        <span class="text-3xs text-slate-450 mt-0.5 block">Pagi / Regular</span>
-                                    </div>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-3 p-3 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="shift" value="Shift 2" class="sr-only peer" onchange="updateRadioStyles()">
-                                    <div class="w-4.5 h-4.5 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <div class="text-left leading-none">
-                                        <span class="text-xs font-bold text-slate-800 block">Shift 2</span>
-                                        <span class="text-3xs text-slate-450 mt-0.5 block">Siang / Regular</span>
-                                    </div>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-3 p-3 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="shift" value="Shift 3" class="sr-only peer" onchange="updateRadioStyles()">
-                                    <div class="w-4.5 h-4.5 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <div class="text-left leading-none">
-                                        <span class="text-xs font-bold text-slate-800 block">Shift 3</span>
-                                        <span class="text-3xs text-slate-450 mt-0.5 block">Malam / Regular</span>
-                                    </div>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-3 p-3 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none sm:col-span-2 lg:col-span-1.5">
-                                    <input type="radio" name="shift" value="Shift 1 (Longshift)" class="sr-only peer" onchange="updateRadioStyles()">
-                                    <div class="w-4.5 h-4.5 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <div class="text-left leading-none">
-                                        <span class="text-xs font-bold text-slate-800 block">Shift 1 (Long)</span>
-                                        <span class="text-3xs text-slate-450 mt-0.5 block">Pagi / Lembur</span>
-                                    </div>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-3 p-3 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none sm:col-span-2 lg:col-span-1.5">
-                                    <input type="radio" name="shift" value="Shift 2 (Longshift)" class="sr-only peer" onchange="updateRadioStyles()">
-                                    <div class="w-4.5 h-4.5 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <div class="text-left leading-none">
-                                        <span class="text-xs font-bold text-slate-800 block">Shift 2 (Long)</span>
-                                        <span class="text-3xs text-slate-450 mt-0.5 block">Siang / Lembur</span>
-                                    </div>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
-                                </label>
-
+                                <!-- Status Badge -->
+                                @if($report->status == 'approved')
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-3xs font-bold border border-emerald-500/20 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
+                                    </span>
+                                @elseif($report->status == 'rejected')
+                                    <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-3xs font-bold border border-rose-500/20 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 text-3xs font-bold border border-amber-500/20 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+                                    </span>
+                                @endif
                             </div>
+
+                            <h3 class="text-sm font-bold text-slate-800">
+                                {{ $report->produk_yang_dikerjakan }} 
+                                <span class="text-xs text-slate-400 font-normal">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
+                            </h3>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-xs text-slate-500">
+                                <div>Operator: <strong class="text-slate-700">{{ $report->operator }}</strong></div>
+                                <div>Tanggal Kerja: <strong class="text-slate-700">{{ \Carbon\Carbon::parse($report->tanggal)->format('d-m-Y') }}</strong></div>
+                                <div>Volume Hasil: <strong class="text-slate-800 text-sm font-extrabold">{{ number_format($report->hasil) }}</strong> {{ $report->satuan }}</div>
+                                <div>Waktu Kirim: <strong class="text-slate-700">{{ $report->created_at->format('H:i') }} Wib</strong></div>
+                            </div>
+
+                            @if($report->keterangan)
+                                <p class="text-xs text-slate-500 italic bg-slate-50 border border-slate-200/50 rounded-lg p-2 max-w-2xl font-outfit">
+                                    "{{ $report->keterangan }}"
+                                </p>
+                            @endif
+
+                            @if($report->status == 'rejected' && $report->catatan_revisi)
+                                <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2">
+                                    <i data-lucide="message-square" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
+                                    <div>
+                                        <span class="font-bold">Alasan Penolakan:</span> {{ $report->catatan_revisi }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Actions (Approve/Reject) -->
+                        <div class="flex flex-wrap md:flex-col items-stretch justify-end gap-2 shrink-0 w-full md:w-44">
+                            @if($report->status === 'pending')
+                                <form action="{{ route('wound-reports.approve', $report->id) }}" method="POST" class="w-full">
+                                    @csrf
+                                    <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                        <span>Setujui Laporan</span>
+                                    </button>
+                                </form>
+
+                                <button onclick="openRejectDialog({{ $report->id }}, '{{ $report->operator }}', '{{ $report->produk_yang_dikerjakan }}')" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                    <span>Tolak / Minta Revisi</span>
+                                </button>
+                            @endif
+
+                            <!-- Delete Option -->
+                            <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini secara permanen dari database?')" class="w-full">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-semibold transition-all">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <span>Hapus Permanen</span>
+                                </button>
+                            </form>
                         </div>
 
                     </div>
-
-                    <!-- SECTION: Identitas Vendor & Operator -->
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
-                        <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
-                            <i data-lucide="users" class="w-4 h-4 text-primary-600"></i>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Identitas Vendor & Operator</h3>
+                    @empty
+                    <div class="text-center py-16 space-y-3 text-slate-400">
+                        <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400 border border-slate-200">
+                            <i data-lucide="folder-open" class="w-6 h-6"></i>
                         </div>
-
-                        <!-- PILIH VENDOR radio grid -->
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-slate-650 block">Pilih Vendor <span class="text-rose-500">*</span></label>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="KWI" checked class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">KWI</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="MJA" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">MJA</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="-" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">-</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="AA" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">AA</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="IPS" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">IPS</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
-                                    <input type="radio" name="vendor" value="JMI" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">JMI</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-
-                                <label class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none sm:col-span-2">
-                                    <input type="radio" name="vendor" value="Other" class="sr-only peer" onchange="updateRadioStyles(); toggleVendorOther(); updateOperatorOptions()">
-                                    <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-800">Other:</span>
-                                    <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/10 transition-all"></div>
-                                </label>
-                            </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700">Tidak ada laporan ditemukan</h3>
+                            <p class="text-xs text-slate-500 mt-1">Coba sesuaikan filter pencarian atau tunggu laporan masuk dari operator.</p>
                         </div>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
 
-                        <!-- Vendor Other custom text field -->
-                        <div id="vendorOtherContainer" class="hidden space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 block">Nama Vendor Kustom <span class="text-rose-500">*</span></label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                </span>
-                                <input type="text" id="vendor_other_text" placeholder="Tuliskan nama vendor lainnya..." class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
-                            </div>
+            <!-- Inline Reject Dialog Modal overlay (Hidden initially) -->
+            <div id="rejectModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden animate-scale-up">
+                    <div class="bg-rose-900 text-white p-4 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-450"></i>
+                        <h3 class="font-bold font-outfit">Tolak Laporan & Minta Revisi</h3>
+                    </div>
+                    <form id="rejectForm" method="POST" class="p-5 space-y-4">
+                        @csrf
+                        <div class="text-xs text-slate-600">
+                            <p>Anda menolak laporan dari: <strong id="rejectOperatorName" class="text-slate-800"></strong></p>
+                            <p class="mt-0.5">Produk: <span id="rejectProductName" class="italic"></span></p>
                         </div>
-
-                        <!-- NAMA OPERATOR dropdown -->
+                        
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-650 block">Nama Operator <span class="text-rose-500">*</span></label>
-                            <select name="operator" id="operator_select" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
-                                <option value="" disabled selected>Choose</option>
-                            </select>
+                            <label for="catatan_revisi" class="text-xs font-bold text-slate-700 block">Tuliskan Catatan Perbaikan/Kesalahan <span class="text-rose-500">*</span></label>
+                            <textarea id="catatan_revisi" name="catatan_revisi" required rows="3" placeholder="Contoh: Salah ketik hasil, seharusnya 35 PCS bukan 3500. Silakan input ulang." class="w-full rounded-lg border border-slate-350 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all resize-none"></textarea>
                         </div>
+
+                        <div class="flex justify-end gap-2.5 pt-2">
+                            <button type="button" onclick="closeRejectDialog()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 transition-all">
+                                Batal
+                            </button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all">
+                                Tolak & Kirim Koreksi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                function openRejectDialog(reportId, operatorName, productName) {
+                    const modal = document.getElementById('rejectModal');
+                    const form = document.getElementById('rejectForm');
+                    
+                    form.action = `/wound-reports/${reportId}/reject`;
+                    document.getElementById('rejectOperatorName').textContent = operatorName;
+                    document.getElementById('rejectProductName').textContent = productName;
+                    
+                    modal.classList.remove('hidden');
+                }
+
+                function closeRejectDialog() {
+                    document.getElementById('rejectModal').classList.add('hidden');
+                    document.getElementById('catatan_revisi').value = '';
+                }
+            </script>
+
+        @else
+            
+            <!-- ========================================== -->
+            <!-- STAFF / OPERATOR DASHBOARD VIEW            -->
+            <!-- ========================================== -->
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left Side: Interactive Input Form -->
+                <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+                    
+                    <!-- Edit Mode Banner -->
+                    <div id="editBanner" class="bg-blue-600 text-white px-5 py-3 flex items-center justify-between border-b border-blue-700 hidden">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                            <span class="text-xs font-bold">Mode Revisi: Memperbaiki laporan <span id="editReportName" class="underline"></span></span>
+                        </div>
+                        <button type="button" onclick="cancelEdit()" class="text-xs font-bold hover:underline bg-blue-700 px-2 py-0.5 rounded">
+                            Batal Edit
+                        </button>
                     </div>
 
-                    <!-- SECTION 2: Spesifikasi & Jenis Produk -->
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
-                        <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
-                            <i data-lucide="package" class="w-4 h-4 text-primary-600"></i>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Spesifikasi Produk</h3>
-                        </div>
-
-                        <!-- Grid row: Pengerjaan & Jenis Produk -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-650 block">Pengerjaan <span class="text-rose-500">*</span></label>
-                                <select name="pengerjaan" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
-                                    <option value="" disabled selected>Choose</option>
-                                    <option value="OPERATOR">OPERATOR</option>
-                                    <option value="PACKING">PACKING</option>
-                                    <option value="ASSEMBLING">ASSEMBLING</option>
-                                    <option value="GULUNG">GULUNG</option>
-                                    <option value="GULUNG + PACKING">GULUNG + PACKING</option>
-                                    <option value="POUCH + SEAL + PACKING">POUCH + SEAL + PACKING</option>
-                                    <option value="POUCH + SEAL">POUCH + SEAL</option>
-                                    <option value="POTONG">POTONG</option>
-                                    <option value="GULUNG BB SAMBUNGAN">GULUNG BB SAMBUNGAN</option>
-                                    <option value="SPLIT BB">SPLIT BB</option>
-                                    <option value="PLONG">PLONG</option>
-                                    <option value="SEAL">SEAL</option>
-                                    <option value="POUCH + PACK">POUCH + PACK</option>
-                                    <option value="MEMBERSIHKAN BB">MEMBERSIHKAN BB</option>
-                                </select>
+                    <!-- Card Header -->
+                    <div class="bg-office-750 text-white p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-primary-500/10 text-primary-400 flex items-center justify-center shrink-0">
+                                <i data-lucide="edit-3" class="w-4.5 h-4.5"></i>
                             </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-650 block">Jenis Produk <span class="text-rose-500">*</span></label>
-                                <select name="jenis_produk" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
-                                    <option value="" disabled selected>Choose</option>
-                                    <option value="ULTRAFIX">ULTRAFIX</option>
-                                    <option value="PLESTERIN ROLL">PLESTERIN ROLL</option>
-                                    <option value="ISOPLAST">ISOPLAST</option>
-                                    <option value="ISOPORE">ISOPORE</option>
-                                    <option value="ISOFIX">ISOFIX</option>
-                                    <option value="ECG PAPER">ECG PAPER</option>
-                                    <option value="PLESTERIN">PLESTERIN</option>
-                                    <option value="STERIL POUCH">STERIL POUCH</option>
-                                    <option value="EKAPLAST">EKAPLAST</option>
-                                    <option value="DERMAFIX">DERMAFIX</option>
-                                    <option value="HOTMELT">HOTMELT</option>
-                                    <option value="SLITING">SLITING</option>
-                                    <option value="POUCH">POUCH</option>
-                                    <option value="FLEXO">FLEXO</option>
-                                    <option value="RIWEND">RIWEND</option>
-                                    <option value="K-ONE">K-ONE</option>
-                                    <option value="SUPERFIX">SUPERFIX</option>
-                                    <option value="C-DOT">C-DOT</option>
-                                    <option value="SUPERFIX SENSITIVE">SUPERFIX SENSITIVE</option>
-                                    <option value="SILICONE TAPE">SILICONE TAPE</option>
-                                    <option value="LIPO FOAM">LIPO FOAM</option>
-                                    <option value="MEDIFLEX">MEDIFLEX</option>
-                                    <option value="DISPOSABLE MOUTHPIECE SPIROMETER">DISPOSABLE MOUTHPIECE SPIROMETER</option>
-                                </select>
+                            <div class="min-w-0">
+                                <h2 class="text-base font-bold font-outfit text-white">Form Laporan Hasil Produksi</h2>
+                                <p class="text-2xs text-slate-400">Pengisian data diverifikasi atas nama: <strong class="text-white">{{ session('operator_name') }} ({{ session('operator_vendor') }})</strong></p>
                             </div>
                         </div>
-
-                        <!-- Produk Yang Dikerjakan -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-650 block">Produk yang Dikerjakan <span class="text-rose-500">*</span></label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                                    <i data-lucide="tag" class="w-4 h-4"></i>
-                                </span>
-                                <input type="text" name="produk_yang_dikerjakan" required placeholder="Tuliskan nama lengkap/seri produk" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
-                            </div>
-                        </div>
+                        <span class="self-start sm:self-auto text-3xs bg-rose-500/20 text-rose-450 border border-rose-500/35 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 whitespace-nowrap">
+                            Wajib *
+                        </span>
                     </div>
 
-                    <!-- SECTION 3: Output & Keterangan -->
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
-                        <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
-                            <i data-lucide="activity" class="w-4 h-4 text-primary-600"></i>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Output & Volume Hasil</h3>
-                        </div>
+                    <!-- Form Body -->
+                    <form id="productionForm" action="{{ route('wound-reports.store') }}" method="POST" class="p-5 sm:p-6 space-y-5">
+                        @csrf
+                        
+                        <!-- Hidden ID for edit mode -->
+                        <input type="hidden" name="report_id" id="report_id" value="">
 
-                        <!-- Grid row: Hasil & Satuan -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- SECTION 1: Waktu & Shift -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
+                                <i data-lucide="clock" class="w-4 h-4 text-primary-600"></i>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Shift & Waktu Pengerjaan</h3>
+                            </div>
+
+                            <!-- Countdown & Cooldown Info Banner -->
+                            @if(session('operator_role') === 'karyawan')
+                            <div class="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3 shadow-sm">
+                                <div class="flex items-center gap-3 cursor-pointer select-none" onclick="toggleScheduleCollapse()">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0" id="countdown-form-icon-bg">
+                                        <i id="countdown-form-icon" data-lucide="timer" class="w-4 h-4 text-amber-600 animate-pulse"></i>
+                                    </div>
+                                    <div class="text-left flex-1 min-w-0">
+                                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Status Batas Pelaporan</span>
+                                        <span id="countdown-form-text" class="text-xs font-semibold text-slate-700 block mt-0.5">Memuat sisa waktu...</span>
+                                    </div>
+                                    <!-- Toggle Collapse Chevron -->
+                                    <div class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                                        <i id="schedule-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                                    </div>
+                                </div>
+                                <div id="schedule-details" class="hidden border-t border-slate-200/60 pt-2.5">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Jadwal Pengisian Laporan:</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                        @foreach($shiftWindows as $sName => $sInfo)
+                                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200/60">
+                                            <span class="font-medium text-slate-700">{{ $sName }}</span>
+                                            <span class="text-primary-600 font-bold">Batas: {{ $sInfo['window'] }}</span>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Date input wrapper -->
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-650 block">Hasil <span class="text-rose-500">*</span></label>
+                                <label class="text-xs font-bold text-slate-650 flex items-center gap-1.5">
+                                    Tanggal Kerja <span class="text-rose-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                                        <i data-lucide="hash" class="w-4 h-4"></i>
+                                        <i data-lucide="calendar" class="w-4 h-4"></i>
                                     </span>
-                                    <input type="number" name="hasil" required placeholder="0" min="0" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                    <input type="date" name="tanggal" id="tanggal" required class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
 
+                            <!-- Shift Radio Cards -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-650 block">Pilih Shift Kerja <span class="text-rose-500">*</span></label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    
+                                    @foreach($shiftWindows as $sName => $sInfo)
+                                    <label class="relative flex items-center gap-2.5 py-2 px-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer radio-card hover:border-slate-400 select-none">
+                                        <input type="radio" name="shift" value="{{ $sName }}" {{ $loop->first ? 'checked' : '' }} class="sr-only peer" onchange="updateRadioStyles()">
+                                        <div class="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center shrink-0 peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-colors">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform"></div>
+                                        </div>
+                                        <div class="text-left leading-none flex-1 flex items-center justify-between gap-1">
+                                            <div class="space-y-0.5">
+                                                <span class="text-xs font-bold text-slate-800 block">{{ $sName }}</span>
+                                                <span class="text-[10px] text-slate-400 block">Jam: {{ $sInfo['work'] }}</span>
+                                            </div>
+                                            <!-- Tooltip Info Icon -->
+                                            <div class="relative inline-block group shrink-0">
+                                                <span class="text-slate-400 hover:text-primary-600 transition-colors cursor-help p-0.5">
+                                                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                                                </span>
+                                                <!-- Tooltip text -->
+                                                <div class="absolute bottom-full right-0 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-20 font-normal">
+                                                    Batas Input: {{ $sInfo['window'] }}
+                                                    <div class="absolute top-full right-2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="absolute inset-0 border border-transparent rounded-lg pointer-events-none peer-checked:border-primary-500 peer-checked:bg-primary-50/20 transition-all"></div>
+                                    </label>
+                                    @endforeach
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2: Spesifikasi & Jenis Produk -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
+                                <i data-lucide="package" class="w-4 h-4 text-primary-600"></i>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Spesifikasi Produk</h3>
+                            </div>
+
+                            <!-- Grid row: Pengerjaan & Jenis Produk -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-650 block">Pengerjaan <span class="text-rose-500">*</span></label>
+                                    <select name="pengerjaan" id="pengerjaan" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
+                                        <option value="" disabled selected>Choose</option>
+                                        @foreach($pengerjaans as $item)
+                                            <option value="{{ $item->name }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-650 block">Jenis Produk <span class="text-rose-500">*</span></label>
+                                    <select name="jenis_produk" id="jenis_produk" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
+                                        <option value="" disabled selected>Choose</option>
+                                        @foreach($jenisProduks as $item)
+                                            <option value="{{ $item->name }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Produk Yang Dikerjakan -->
                             <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-650 block">Satuan <span class="text-rose-500">*</span></label>
-                                <select name="satuan" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
-                                    <option value="" disabled selected>Choose</option>
-                                    <option value="PCS">PCS</option>
-                                    <option value="ROLL">ROLL</option>
-                                    <option value="BOX">BOX</option>
-                                    <option value="DOS">DOS</option>
-                                    <option value="TAX">TAX</option>
-                                    <option value="M">M</option>
-                                    <option value="RENCENG">RENCENG</option>
-                                    <option value="AMPLOP">AMPLOP</option>
-                                    <option value="PAC">PAC</option>
-                                </select>
+                                <label class="text-xs font-bold text-slate-650 block">Nama Produk yang Dikerjakan <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
+                                        <i data-lucide="tag" class="w-4 h-4"></i>
+                                    </span>
+                                    <input type="text" name="produk_yang_dikerjakan" id="produk_yang_dikerjakan" required placeholder="Contoh: PLESTERIN ROLL 10x5 cm" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Keterangan -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-650 block">Keterangan Tambahan <span class="text-rose-500">*</span></label>
-                            <div class="relative">
-                                <span class="absolute top-3 left-3 pointer-events-none text-slate-450">
-                                    <i data-lucide="file-text" class="w-4 h-4"></i>
-                                </span>
-                                <textarea name="keterangan" required rows="2" placeholder="Tuliskan catatan pengerjaan atau kendala jika ada" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
+                        <!-- SECTION 3: Output & Keterangan -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
+                                <i data-lucide="activity" class="w-4 h-4 text-primary-600"></i>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Volume Hasil Kerja</h3>
+                            </div>
+
+                            <!-- Grid row: Hasil & Satuan -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-650 block">Hasil <span class="text-rose-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
+                                            <i data-lucide="hash" class="w-4 h-4"></i>
+                                        </span>
+                                        <input type="number" name="hasil" id="hasil" required placeholder="0" min="0" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-650 block">Satuan <span class="text-rose-500">*</span></label>
+                                    <select name="satuan" id="satuan" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer">
+                                        <option value="" disabled selected>Choose</option>
+                                        @foreach($satuans as $item)
+                                            <option value="{{ $item->name }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Keterangan -->
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-650 block">Keterangan Tambahan / Kendala Kerja <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute top-3 left-3 pointer-events-none text-slate-450">
+                                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    </span>
+                                    <textarea name="keterangan" id="keterangan" required rows="2" placeholder="Tuliskan catatan kerja atau kendala (jika tidak ada kendala, tulis 'Lancar' atau '-')" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"></textarea>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Action buttons wrapper -->
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-100 pt-5">
-                        <button type="button" onclick="clearForm()" class="order-2 sm:order-1 w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 hover:text-slate-700 transition-all active:scale-[0.98]">
-                            Reset Formulir
-                        </button>
-                        <button type="submit" class="order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                            <i data-lucide="check" class="w-4 h-4"></i> Simpan Laporan Kerja
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-
-            <!-- Right Side: Statistics & History Logs (Takes 5 cols on desktop) -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- Quick Metrics Widgets -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Widget 1: Total volume of products -->
-                    <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm relative overflow-hidden">
-                        <div class="absolute -right-2 -bottom-2 w-14 h-14 text-slate-50">
-                            <i data-lucide="package" class="w-full h-full opacity-10"></i>
+                        <!-- Action buttons wrapper -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-100 pt-5">
+                            <button type="button" onclick="clearForm()" class="order-2 sm:order-1 w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 hover:text-slate-700 transition-all active:scale-[0.98]">
+                                Reset Formulir
+                            </button>
+                            <button type="submit" class="order-1 sm:order-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i> Ajukan Laporan
+                            </button>
                         </div>
-                        <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider block">Total Volume</span>
-                        <h3 class="text-xl font-bold font-outfit text-slate-800 mt-1">
-                            @php
-                                $totalVolume = 0;
-                                foreach($reports as $r) {
-                                    $totalVolume += $r->hasil;
-                                }
-                                echo number_format($totalVolume);
-                            @endphp
-                            <span class="text-3xs font-medium text-slate-400">unit</span>
-                        </h3>
-                        <span class="text-3xs text-emerald-600 font-semibold flex items-center gap-0.5 mt-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Dari seluruh pengerjaan
-                        </span>
-                    </div>
 
-                    <!-- Widget 2: Count of submissions -->
-                    <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm relative overflow-hidden">
-                        <div class="absolute -right-2 -bottom-2 w-14 h-14 text-slate-50">
-                            <i data-lucide="database" class="w-full h-full opacity-10"></i>
-                        </div>
-                        <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider block">Total Laporan</span>
-                        <h3 class="text-xl font-bold font-outfit text-slate-800 mt-1">
-                            {{ count($reports) }}
-                            <span class="text-3xs font-medium text-slate-400">log</span>
-                        </h3>
-                        <span class="text-3xs text-primary-600 font-semibold flex items-center gap-0.5 mt-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
-                            Terdaftar di SQLite
-                        </span>
-                    </div>
+                    </form>
                 </div>
 
-                <!-- Database Records List -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
-                    
-                    <!-- Box Header -->
+                <!-- Right Side: Personal History List -->
+                <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <div class="flex items-center gap-2">
                             <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Daftar Riwayat Kerja</h3>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Riwayat Laporan Saya</h3>
                         </div>
                         <a href="{{ route('dashboard') }}" class="text-3xs text-primary-600 hover:text-primary-700 font-bold flex items-center gap-0.5">
                             <i data-lucide="rotate-cw" class="w-2.5 h-2.5"></i> Refresh
                         </a>
                     </div>
 
-                    <!-- List body -->
-                    <div class="p-4 space-y-3 max-h-[580px] overflow-y-auto custom-scroll">
-                        
-                        @if(count($reports) == 0)
-                        <!-- Empty list view -->
-                        <div class="text-center py-10 space-y-2.5">
-                            <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
-                                <i data-lucide="folder-open" class="w-5 h-5"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-650">Tidak ada riwayat kerja</h4>
-                                <p class="text-3xs text-slate-400 mt-0.5 max-w-[200px] mx-auto">Mulai merekam log pengerjaan menggunakan form input.</p>
-                            </div>
-                        </div>
-                        @else
-                        
-                        <!-- List entries -->
-                        @foreach($reports as $report)
-                        <div class="p-3.5 rounded-lg border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/30 transition-all bg-white relative group">
+                    <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
+                        @forelse($reports as $report)
+                        <div class="p-3.5 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-white relative group">
                             
-                            <!-- Badges & actions row -->
+                            <!-- Badges & Action Toolbar -->
                             <div class="flex items-start justify-between gap-3 mb-2">
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    <!-- Shift Badge with dynamic color -->
-                                    @php
-                                        $badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
-                                        if ($report->shift == 'Shift 1') $badgeColor = 'bg-sky-50 text-sky-700 border-sky-200';
-                                        elseif ($report->shift == 'Shift 2') $badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                        elseif ($report->shift == 'Shift 3') $badgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
-                                        elseif (str_contains($report->shift, 'Longshift')) $badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
-                                    @endphp
-                                    <span class="px-2 py-0.5 rounded text-3xs font-bold border {{ $badgeColor }} uppercase tracking-wider">
+                                    <span class="px-2 py-0.5 rounded text-3xs font-extrabold border border-slate-200 bg-slate-50 text-slate-700 uppercase">
                                         {{ $report->shift }}
                                     </span>
                                     
-                                    <!-- Vendor Badge -->
-                                    <span class="px-2 py-0.5 rounded bg-primary-50 text-primary-750 border border-primary-100 text-3xs font-bold uppercase tracking-wide">
-                                        Vendor: {{ $report->vendor }}
-                                    </span>
-
-                                    <!-- Work Mode Badge -->
-                                    <span class="px-2 py-0.5 rounded bg-slate-105 text-slate-600 border border-slate-200 text-3xs font-semibold uppercase tracking-wider">
-                                        {{ $report->pengerjaan }}
-                                    </span>
+                                    <!-- Dynamic status indicator -->
+                                    @if($report->status == 'approved')
+                                        <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-bold uppercase">
+                                            Disetujui
+                                        </span>
+                                    @elseif($report->status == 'rejected')
+                                        <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-3xs font-bold uppercase animate-pulse">
+                                            Perlu Revisi
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-3xs font-bold uppercase">
+                                            Menunggu
+                                        </span>
+                                    @endif
                                 </div>
 
-                                <!-- Delete Trigger -->
-                                <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini?')" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity absolute right-2.5 top-2.5 sm:relative sm:right-0 sm:top-0 shrink-0">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-1 rounded bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-all" title="Hapus Log">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                </form>
+                                <!-- Action Buttons for Pending/Rejected reports -->
+                                <div class="flex items-center gap-1.5">
+                                    @if($report->status === 'rejected')
+                                        <button onclick="editReport({{ json_encode($report) }})" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-3xs font-bold flex items-center gap-1">
+                                            <i data-lucide="edit-2" class="w-3 h-3"></i>
+                                            <span>Revisi</span>
+                                        </button>
+                                    @endif
+
+                                    @if($report->status !== 'approved')
+                                        <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini?')" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-1 rounded bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all" title="Hapus Laporan">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
 
                             <!-- Core info -->
                             <div class="space-y-1">
-                                <h4 class="text-xs font-bold text-slate-800 flex flex-wrap items-center gap-1">
+                                <h4 class="text-xs font-bold text-slate-800">
                                     {{ $report->produk_yang_dikerjakan }}
-                                    <span class="text-3xs text-slate-400 font-normal">({{ $report->jenis_produk }})</span>
+                                    <span class="text-3xs text-slate-400 font-normal">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
                                 </h4>
-                                
-                                <div class="text-3xs text-slate-600 flex items-center gap-1 py-0.5">
-                                    <i data-lucide="user" class="w-3 h-3 text-slate-400"></i>
-                                    <span>Operator: <strong>{{ $report->operator }}</strong></span>
-                                </div>
 
-                                <div class="flex items-center justify-between gap-4 text-3xs text-slate-500">
-                                    <div class="flex items-center gap-1">
+                                <div class="flex items-center justify-between text-3xs text-slate-500 pt-1">
+                                    <div>
                                         <span class="font-bold text-slate-700">Hasil:</span>
-                                        <span class="text-xs font-extrabold text-slate-800">{{ $report->hasil }}</span>
+                                        <span class="text-xs font-extrabold text-slate-800">{{ number_format($report->hasil) }}</span>
                                         <span class="font-medium text-slate-450">{{ $report->satuan }}</span>
                                     </div>
-                                    <span class="font-mono text-slate-400 flex items-center gap-0.5">
-                                        <i data-lucide="calendar" class="w-2.5 h-2.5"></i>
+                                    <span class="font-mono text-slate-400">
                                         {{ \Carbon\Carbon::parse($report->tanggal)->format('d/m/Y') }}
                                     </span>
                                 </div>
@@ -641,525 +724,266 @@
                                     "{{ $report->keterangan }}"
                                 </div>
                                 @endif
+
+                                @if($report->status === 'rejected' && $report->catatan_revisi)
+                                <div class="mt-2 p-2 rounded-lg bg-rose-50 border border-rose-100 text-3xs text-rose-800">
+                                    <span class="font-bold flex items-center gap-1 text-rose-700 mb-0.5">
+                                        <i data-lucide="alert-circle" class="w-3 h-3 text-rose-600"></i>
+                                        Catatan Koordinator:
+                                    </span>
+                                    {{ $report->catatan_revisi }}
+                                </div>
+                                @endif
                             </div>
 
                         </div>
-                        @endforeach
-                        
-                        @endif
-
+                        @empty
+                        <div class="text-center py-10 space-y-2.5">
+                            <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
+                                <i data-lucide="folder-open" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-650">Tidak ada riwayat kerja</h4>
+                                <p class="text-3xs text-slate-400 mt-0.5">Laporan pengerjaan Anda akan muncul di sini setelah diajukan.</p>
+                            </div>
+                        </div>
+                        @endforelse
                     </div>
-
                 </div>
 
             </div>
 
-        </div>
+            <script>
+                // Highlight active radio card
+                function updateRadioStyles() {
+                    const cards = document.querySelectorAll('.radio-card');
+                    cards.forEach(card => {
+                        const input = card.querySelector('input');
+                        if (input.checked) {
+                            card.classList.remove('border-slate-300');
+                            card.classList.add('border-primary-500', 'bg-primary-50/5');
+                        } else {
+                            card.classList.remove('border-primary-500', 'bg-primary-50/5');
+                            card.classList.add('border-slate-300');
+                        }
+                    });
+                }
+
+                // Toggle shift schedule details collapse
+                function toggleScheduleCollapse() {
+                    const details = document.getElementById('schedule-details');
+                    const chevron = document.getElementById('schedule-chevron');
+                    if (!details || !chevron) return;
+                    
+                    if (details.classList.contains('hidden')) {
+                        details.classList.remove('hidden');
+                        chevron.classList.add('rotate-180');
+                    } else {
+                        details.classList.add('hidden');
+                        chevron.classList.remove('rotate-180');
+                    }
+                }
+
+                // Initial setup
+                updateRadioStyles();
+
+                // Countdown timer for Karyawan
+                const countdownText = document.getElementById('countdown-text');
+                const countdownFormText = document.getElementById('countdown-form-text');
+                if (countdownText || countdownFormText) {
+                    let serverTime = new Date({{ now('Asia/Jakarta')->timestamp * 1000 }});
+                    
+                    function updateCountdown() {
+                        serverTime.setSeconds(serverTime.getSeconds() + 1);
+
+                        const now = serverTime;
+                        const currentHour = now.getHours();
+                        const currentMin = now.getMinutes();
+                        const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
+
+                        // Define windows
+                        const windows = [
+                            { name: 'Shift 3 / Lembur 2', start: '04:00', end: '07:00' },
+                            { name: 'Shift 1', start: '12:00', end: '15:00' },
+                            { name: 'Lembur Shift 1', start: '16:00', end: '19:00' },
+                            { name: 'Shift 2', start: '20:00', end: '23:00' }
+                        ];
+
+                        // 1. Check if any window is currently active
+                        let activeWindow = null;
+                        for (const w of windows) {
+                            if (currentTimeStr >= w.start && currentTimeStr < w.end) {
+                                activeWindow = w;
+                                break;
+                            }
+                        }
+
+                        const countdownIcon = document.getElementById('countdown-icon');
+                        const countdownFormIconBg = document.getElementById('countdown-form-icon-bg');
+                        const countdownFormIcon = document.getElementById('countdown-form-icon');
+
+                        if (activeWindow) {
+                            // Calculate remaining time
+                            const [endH, endM] = activeWindow.end.split(':').map(Number);
+                            const endDate = new Date(now);
+                            endDate.setHours(endH, endM, 0, 0);
+                            
+                            const diffMs = endDate - now;
+                            const diffSecs = Math.max(0, Math.floor(diffMs / 1000));
+                            
+                            const hours = Math.floor(diffSecs / 3600);
+                            const mins = Math.floor((diffSecs % 3600) / 60);
+                            const secs = diffSecs % 60;
+                            
+                            const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                            
+                            if (countdownText) {
+                                countdownText.innerHTML = `<span class="text-emerald-400 font-bold">Bisa Laporan (${activeWindow.name})</span> sisa: <span class="font-mono text-white font-bold">${timeStr}</span>`;
+                            }
+                            if (countdownFormText) {
+                                countdownFormText.innerHTML = `<span class="text-emerald-600 font-bold">Terbuka (${activeWindow.name})</span> &bull; Sisa waktu pengisian: <span class="font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">${timeStr}</span>`;
+                            }
+                            
+                            if (countdownIcon) {
+                                countdownIcon.className = 'w-3.5 h-3.5 text-emerald-400 animate-pulse';
+                            }
+                            if (countdownFormIconBg) {
+                                countdownFormIconBg.className = 'w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0';
+                            }
+                            if (countdownFormIcon) {
+                                countdownFormIcon.className = 'w-4 h-4 animate-pulse text-emerald-600';
+                            }
+                        } else {
+                            // Find next window
+                            let closestDiff = Infinity;
+                            let nextW = null;
+                            let isTomorrow = false;
+
+                            for (const w of windows) {
+                                const [startH, startM] = w.start.split(':').map(Number);
+                                const startDate = new Date(now);
+                                startDate.setHours(startH, startM, 0, 0);
+
+                                let diffMs = startDate - now;
+                                if (diffMs < 0) {
+                                    // If it already passed today, check tomorrow
+                                    startDate.setDate(startDate.getDate() + 1);
+                                    diffMs = startDate - now;
+                                    if (diffMs < closestDiff) {
+                                        closestDiff = diffMs;
+                                        nextW = w;
+                                        isTomorrow = true;
+                                    }
+                                } else {
+                                    if (diffMs < closestDiff) {
+                                        closestDiff = diffMs;
+                                        nextW = w;
+                                        isTomorrow = false;
+                                    }
+                                }
+                            }
+
+                            if (nextW) {
+                                const diffSecs = Math.max(0, Math.floor(closestDiff / 1000));
+                                const hours = Math.floor(diffSecs / 3600);
+                                const mins = Math.floor((diffSecs % 3600) / 60);
+                                const secs = diffSecs % 60;
+                                
+                                const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                                
+                                if (countdownText) {
+                                    countdownText.innerHTML = `Buka dalam: <span class="font-mono text-amber-400 font-bold">${timeStr}</span> (${nextW.name}${isTomorrow ? ' Besok' : ''})`;
+                                }
+                                if (countdownFormText) {
+                                    countdownFormText.innerHTML = `<span class="text-amber-600 font-bold">Ditutup</span> &bull; Buka dalam: <span class="font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">${timeStr}</span> (${nextW.name}${isTomorrow ? ' Besok' : ''})`;
+                                }
+                                
+                                if (countdownIcon) {
+                                    countdownIcon.className = 'w-3.5 h-3.5 text-amber-400 animate-pulse';
+                                }
+                                if (countdownFormIconBg) {
+                                    countdownFormIconBg.className = 'w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0';
+                                }
+                                if (countdownFormIcon) {
+                                    countdownFormIcon.className = 'w-4 h-4 animate-pulse text-amber-650';
+                                }
+                            }
+                        }
+                    }
+
+                    // Run immediately and then every second
+                    updateCountdown();
+                    setInterval(updateCountdown, 1000);
+                }
+
+                // Edit function for rejected records
+                function editReport(report) {
+                    document.getElementById('report_id').value = report.id;
+                    document.getElementById('tanggal').value = report.tanggal;
+                    
+                    // Set shift radio button
+                    const radios = document.querySelectorAll('input[name="shift"]');
+                    radios.forEach(radio => {
+                        radio.checked = (radio.value === report.shift);
+                    });
+                    
+                    document.getElementById('pengerjaan').value = report.pengerjaan;
+                    document.getElementById('jenis_produk').value = report.jenis_produk;
+                    document.getElementById('produk_yang_dikerjakan').value = report.produk_yang_dikerjakan;
+                    document.getElementById('hasil').value = report.hasil;
+                    document.getElementById('satuan').value = report.satuan;
+                    document.getElementById('keterangan').value = report.keterangan;
+
+                    // Show info banner
+                    document.getElementById('editBanner').classList.remove('hidden');
+                    document.getElementById('editReportName').textContent = report.produk_yang_dikerjakan;
+
+                    // Scroll to form smoothly
+                    document.getElementById('productionForm').scrollIntoView({ behavior: 'smooth' });
+                    updateRadioStyles();
+                }
+
+                // Cancel Edit
+                function cancelEdit() {
+                    document.getElementById('report_id').value = '';
+                    document.getElementById('editBanner').classList.add('hidden');
+                    clearFormFields();
+                }
+
+                function clearFormFields() {
+                    document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('pengerjaan').selectedIndex = 0;
+                    document.getElementById('jenis_produk').selectedIndex = 0;
+                    document.getElementById('produk_yang_dikerjakan').value = '';
+                    document.getElementById('hasil').value = '';
+                    document.getElementById('satuan').selectedIndex = 0;
+                    document.getElementById('keterangan').value = '';
+                }
+
+                function clearForm() {
+                    if(confirm("Apakah Anda yakin ingin mengosongkan form?")) {
+                        clearFormFields();
+                        document.getElementById('report_id').value = '';
+                        document.getElementById('editBanner').classList.add('hidden');
+                    }
+                }
+            </script>
+            
+        @endif
 
     </main>
 
-    <!-- App Footer -->
+    <!-- Footer -->
     <footer class="bg-slate-900 border-t border-slate-800 text-slate-400 py-6 mt-12 shrink-0">
         <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 text-center sm:flex sm:items-center sm:justify-between">
-            <span class="text-2xs block sm:inline">&copy; 2026 Loka Medical Systems - Laporan Produksi.</span>
-            <span class="text-3xs text-slate-500 block sm:inline mt-1 sm:mt-0 uppercase tracking-wider font-semibold font-outfit">Sistem Administrasi Profesional</span>
+            <span class="text-2xs block sm:inline">&copy; 2026 Woundcare. All rights reserved.</span>
+            <span class="text-3xs text-slate-500 block sm:inline mt-1 sm:mt-0 uppercase tracking-wider font-semibold font-outfit">Sistem Verifikasi & Proteksi Laporan Harian</span>
         </div>
     </footer>
 
     <script>
-        // Init Lucide
+        // Initialize lucide icons for both layouts
         lucide.createIcons();
-
-        const operatorLists = {
-            'KWI': [
-                "ADITYA ANANDA PUTRI PRATAMA",
-                "AIDA NUR AVIDA",
-                "AJI PAMUNGKAS",
-                "AKHMAD ARIF PUJIONO",
-                "ALIATUN NIKMAH",
-                "ALIYAH NURUR ROKHIMAH",
-                "ANAS TASYA PITRI A",
-                "BAGUS SETIAWAN",
-                "BUNGA VIKA KHARISMA",
-                "CATRINE AMANDA BUDIARTI",
-                "CHERIL VEBRI ANINDI",
-                "DERIS SETIA DWI JULIAN",
-                "DEVINA RAHMA",
-                "DIANA LILIK JUWARNI",
-                "DIFANI APRILIA BERLIANTI",
-                "EGA NUR CAHYANA",
-                "ELI SUSANTI",
-                "ERIKO IFANDI",
-                "FITA INDRIANI",
-                "GITA AGUSTIN",
-                "HANNA AYU PERTIWI",
-                "HARUN AL RASYID",
-                "HASAN MUKMIN ABDUNNASIR",
-                "IMROATUL MUFIDAH",
-                "INDRA SUNDARI",
-                "IRDADIAN WAHYUNI",
-                "KUSNUL AFIFA",
-                "LINTANG DWIANING PUTRI",
-                "LISTRIANA HENY",
-                "LUMATUL ABIDAH",
-                "LUTHFIYAH APTA INDRIATI",
-                "M AGUNG SBASTIAN",
-                "M FERI KURNIAWAN",
-                "M NUR BAYU ANDRIANI PUTRA",
-                "MAULANA RYAMZARD RYACUDU",
-                "MIFTACHUN NIKMAH",
-                "MILA INDAH CAHYANTI",
-                "MOCHAMMAD RIZAL AINUR ROFIK",
-                "MOH NUZULUL RAMADHANI",
-                "MOHAMAD FARUL",
-                "MUCHAMMAD FAISAL ZAINUR ROZI",
-                "MUHAMMAD ADE MAULANA",
-                "MUHAMMAD ALI FAIZIN",
-                "MUHAMMAD IMAM BAIHAKI KWI",
-                "MUSONNINUR NISAK MEI",
-                "NANI FITRIA",
-                "NAWAF ADAMAZIZ",
-                "NUR FAUZAN ROHMATULLOH",
-                "PUTRI DIANA",
-                "RIFKA AGUSTINA IFFAHYANTI",
-                "RISKI ADI SETIAWAN",
-                "RISTA  DWI PURWANTI",
-                "RITA ARIYANTI",
-                "ROHMATIN MAULIDA",
-                "SEPTIAN ANDANI FAUZI",
-                "SHABRINA ZULFIA RIZKA",
-                "SINTA NOFITASARI",
-                "SITI NURMA LIKATUS A.",
-                "SRI WAHYUNI KWI",
-                "SULTON ARIF",
-                "SUPIYAH",
-                "TRI AYU WILUJENG",
-                "UMI FARIDA PUSPITA NINGRUM",
-                "ZAINAL DINOVA",
-                "MOCHAMAD SAIFUL AMIN",
-                "ANGGUN CITRA LESTARI",
-                "ANIS MUNTHOHIROH",
-                "FIRMANUDIN YUGA PUTRA",
-                "BILAL RAHMAD PANDEWO",
-                "SINTA WANDARI",
-                "SIROJUL ANWAR",
-                "M ISKANDAR ALI",
-                "RICO MORENO ARDIANSYAH",
-                "FIRDHA NUR CAHYANI",
-                "RENY HANAFIAH",
-                "MOHAMMAD KHOIRUL HUDA",
-                "YUSUF SANDI BIMAWAN",
-                "ROBIATUL ADAWIYAH",
-                "RINI HARIATI",
-                "ILHAM KHOIRUN ABDILLAH",
-                "MUHAMMAD DWIKY WAHYUDI",
-                "IMROATUS SHOLIHAH",
-                "NUR LAILATUL ROHMA",
-                "NOVIANTI PARLIANDINI",
-                "ABILIA SISKA SAPUTRI",
-                "FRISKA SELYNA ASTIAJI",
-                "KHARISMA MAHARANI PUTRI",
-                "INDAH AYU PRATIWI",
-                "YULIANA HERAWATI",
-                "FANE SAFIORENTA PUTRI",
-                "AL'AINA'UL MARDHIYAH",
-                "AISYAH MAR'ATUN SHOLICHAH",
-                "ALYA FITRI RHAMADHANI",
-                "ACHMAD BAIEAD ABDILLA"
-            ],
-            'MJA': [
-                "AANG ABDULLOH SUKUR R",
-                "ACHMAD EKO FIRMANDIANSYAH",
-                "ADE NUR AINI",
-                "ADEN IRGI HADIANTO",
-                "AGUNG PRAYOGI",
-                "AHMAD FAISAL",
-                "AHMAD FAUZAN",
-                "AKHMAD AKHIRU ZIKI ZAKARIA",
-                "ALENA SABILLA LESTARI",
-                "ALICIA PRENEPI Y",
-                "AMELIA AZZAHRO",
-                "ANTON HIDAYATUR ROKHIM",
-                "APRILIA NUR CHAMIDAH",
-                "ARIS DWI ARIANTO",
-                "ARMAN ASHARI",
-                "ATIK IRNAYATI",
-                "AURA DIAS FAIZA",
-                "CICAH MULYA FATMAWATI",
-                "DAFFA AKTUR PRATAMA",
-                "DAVID HADI PRASETYO",
-                "DINI MEISYAROH",
-                "DODIK IRFANUDIN",
-                "EDO ISMAKA",
-                "ELA ADELIA",
-                "ELMA",
-                "ELSA BUDI ARDHANIA",
-                "ELY MULYANI",
-                "FAISAL FAHRI",
-                "FEBYMIA ARIFATUNASIKHA",
-                "FENTI NOFITA SARI",
-                "FIDIAN ARIS ANDIKA",
-                "FIRDA ARIANTI",
-                "HADI SUPRAYITNO",
-                "HAMIDATUN NISA'",
-                "HUSAIN JAUHARI ABDUL",
-                "IDA PURWANTI",
-                "IKA HANDAYANI",
-                "ILMA RUFIANA",
-                "ILMA SARI",
-                "INAYATUL ULA",
-                "INDAH ALISIA",
-                "INDAH SULISTYORINI",
-                "LULUK ROZAKOH",
-                "LUSI NUR ANGGRANI",
-                "M ALI BAIDHOWI",
-                "M IKHSAN DAVID MAULANA",
-                "M WILLIAM FARHANI",
-                "MAY WIDIYA SAHARANI",
-                "MOCHAMMAD SYAHRUL MUFARID",
-                "MOHAMMAD ANDI PRAYOGO",
-                "MOHAMMAD NAUVAL",
-                "MOKHAMAD ILHAM ZAKARIYA",
-                "MUHAMMAD ANDY CHOIRUDIN",
-                "MUHAMMAD DANANG SAPUTRA",
-                "MUHAMMAD EFENDI",
-                "MUHAMMAD SETIO MAULANA",
-                "MUHHAMAD FADIL ALFIANTO",
-                "MURTIANINGSIH",
-                "NADIA NURDIANA PUTRI",
-                "NADIA TASNIM",
-                "NATASHYA SILVANIA ANDRIANA PUTRI",
-                "NOVI EKA KUMALASARI",
-                "NUR MANFAUNAH",
-                "NURUL HASANAH",
-                "NURUL KHATIMAH",
-                "PRATIWI WIDYA SUSANTI",
-                "PUTRI NOR FADHILAH",
-                "QORRI AINA FATIMAH",
-                "RADITYA ANGGA ANSORI",
-                "RESTU BHAKTI HARTANTO",
-                "REVA AMELIA PUTRI",
-                "RINA LUSIANA",
-                "ROHMATUL K",
-                "ROZAQ GHANY AWALLUDIN",
-                "RYAN ARI SETYAWAN",
-                "SALVIA LESTARI",
-                "SHINTA AYU LESTARI",
-                "SITI NUR CHOLIZA",
-                "SRI WULANDARI",
-                "TIARA VIRZINIA",
-                "TRI ILDA APRILIA",
-                "VERA WIDYA WATI",
-                "VIRA MEIDINA",
-                "WAHYUNI RESTUNINGSIH",
-                "WAHYU ADHY PRAJA",
-                "REVA AMELIA PUTRI",
-                "NADIN APRILIA PUTRI",
-                "ANGGI HARYANTI",
-                "HANI FAIZAH",
-                "AMILIA PUTRI DEWI LISTYONO",
-                "MOCHTAR ARIFIN",
-                "ESTIA RINENGSEH",
-                "TIRTA GIO RAMADHAN",
-                "MUHAMMAD ZAINUL ARIFIN",
-                "REVA MAULIDA",
-                "APRILIA WULANDARI",
-                "AHMAD AJI PRATAMA",
-                "DWI AJENG ANGGRAINA",
-                "ANGGUN KHALIMATUS SA'DIYAH",
-                "ZELLO RIZKY ABIATI",
-                "AHMAD RAFI FIVEDI ARIF",
-                "SHOFIYATUS SA'ADAH",
-                "YULIA ERLINA DEWI",
-                "NANDA FAUZIA NURMALASARI",
-                "RARA PUTRI IZZATUL ILMI",
-                "LESTARI AYU NENGTIAS",
-                "HAFIZH SUGARINAWATI",
-                "MUSFIATI",
-                "SHAHIRA AZULAIKA",
-                "SINDA NEFIKA ARIANI"
-            ],
-            'AA': [
-                "AFISYA PARADISA",
-                "ANDINDA SOFIATUR ROFICHO",
-                "ANDRI ARDIANTO",
-                "ARFIAN SAHRU R",
-                "BUDI CAHYO TRI ATMOJO",
-                "DEBI SETYAWAN",
-                "DIENI NURUL KHAQQI EKA R",
-                "FOURIZAL EKA FACHRUDIN",
-                "HABIBATUL NUR INTAN",
-                "HELMI RAFIF",
-                "KASIH SEPTIA RAHMADANIA",
-                "KHUSNUL KHOTIMAH BARU",
-                "LYANA BUNGA PUTRI ARDITA",
-                "M BAGUS MUHAIMIN",
-                "MIA JULIANTI",
-                "MOCH FELIX ALMAZ FAZAH",
-                "MOCHAMMAD ADI PRAWIRO",
-                "MOH. RUSDAN ROSYID",
-                "MOHAMAD BIMA MA'ARIF",
-                "MUHAMMAD ARBI SYAH NURIL",
-                "MUHAMMNAD FARID NUR MAHFUDI",
-                "NATALIA TRISTIN HAKIM",
-                "NICKO BACHTIAR",
-                "NUR ADINDA",
-                "ONGKI WIDIANTO",
-                "PASHA OKTAVIA",
-                "RAGIL PRASETYO",
-                "RETA PUTRI MEIDINA",
-                "REZA ADITYA HILMY",
-                "RISKA DWI SINTAWATI",
-                "SALMAN AL FARISI",
-                "SEPTIANSYAH ISWANTO",
-                "SINTA AYU RISQI RAMADHANI",
-                "WILDA JANUAR ASTIAJI",
-                "YUSUF ARDIANSYAH",
-                "SRI YANTI",
-                "NURMALA HIDHAYANTI",
-                "JUMAININGSIH",
-                "KHOLIDAH KUSNIATIN",
-                "MUHAMMAD YUSUF HANDI TIA",
-                "DINA SABILA",
-                "ELSATRI PUJIYATI",
-                "LIA NOFITA SARI",
-                "VIDA YULIATI",
-                "KUSRINI",
-                "ALFIN RIJKI",
-                "ZHENI OKTA VIOLA",
-                "MUHAMMAD AHWAN MUKAROM",
-                "MUCHAMAD FAISAL NUL CKACKIM",
-                "MUHAMMAD LEO BAGUS SATRIA",
-                "M ARFIAN ARIF",
-                "MIA ARI WIDYANINGRUM",
-                "MOKHAMAD ABDULLAH BASOFI",
-                "SRI WINDARTIK",
-                "NAILATUS SA'ADAH",
-                "AHMAD AINUR ROSYID",
-                "ANGGUN SAFIRA",
-                "ANIS NOFITASARI",
-                "AMIROTUL MU'ALIMAH",
-                "SRIS NOVITA EMILIAWATI",
-                "YUDHA FATHUR RAHMA",
-                "ANNISA SALSABILA",
-                "IMA WILDATUS SHOLIKHAH",
-                "NURUL ISTIQOMAH",
-                "NADIRA ARIANTI",
-                "NUR LAILI PERMATASARI",
-                "GALANG YUWANA ARRAFI",
-                "FERA HESTINA NATALIA",
-                "DEWI EMALIA ANGGRAINI",
-                "IMATUL JANNAH",
-                "ARFINDA ZAHRA",
-                "REZA NURAINI",
-                "MILFA ARLIFI",
-                "NUR HIDAYATUL AULIA",
-                "CANTIKA ENDJELY",
-                "SHOFY NAILATUL MUNAWAROH"
-            ],
-            'IPS': [
-                "ANNISA MAHAROTI ALFITRI",
-                "DEA NUR RAHMA S",
-                "EKA RAHAYU PUTRI A T",
-                "FANDHI TRI SETYA",
-                "FRINA FEBRIANI",
-                "MILA NUR HIDAYAH",
-                "NUR ROHMATIN",
-                "RIDHO RISMAYA",
-                "ROBIM JOSWANDA",
-                "SELFIE RAMADHANI",
-                "UYUN MASRUROH",
-                "FILDZAHANAADITYA YONARA",
-                "LULUK MUSFITA SARI",
-                "KIKI AGUSTIN INTAVIS",
-                "SASTA FADILA WARDANI",
-                "FARADYA AMINATUZ  Z.",
-                "ASMAUL HUSNAh",
-                "MUHAMMAD DAFA WARDANA",
-                "ETI SETYOWATI",
-                "AYU SYAFRIDA",
-                "GITARIA WIJIANTI",
-                "MIFTAHUR ROHMAT AMIRUDDIN ZAKARIA",
-                "NOVIA AGUSTINA",
-                "MAUDIY PUTRI APRILLIA",
-                "DARREL HYANGI MAHARANI",
-                "LUTFI WULAN SARI",
-                "SITI NUR ROHMAH",
-                "DITA DWI ARIMBI",
-                "NANANG WIJAYA",
-                "HAFIS INDRA SAYOGA",
-                "BAGUS DWI CAHYONO",
-                "FERDIANSYAH PRAMUDYA",
-                "MUHAMMAD ALFIRDAUS",
-                "NANDHA AUDIA SLAMET",
-                "MUHAMMAD LAZUARDI PRASETYO",
-                "FIONANTA RAHMA ULA YUSTIAR",
-                "AZZOYA PUTRI ASYARI",
-                "FERNANDA APRILIA",
-                "RIFQI ARIYANTO",
-                "ARIS SULIANTO",
-                "LAILATUL DWI ANISAH",
-                "LAYLI NUR FITRIANA",
-                "DEBY AMELIA",
-                "RISDAYANTI ELVITA RANI",
-                "NANIK FARIDA",
-                "ERIKA",
-                "CHURIL NUZULIATIL AFIFAH",
-                "EKA RIWAYANTI NINGSIH",
-                "SHEPTIA AYU FIRDAYANTI",
-                "MARCELLA MARTA ABHINAYA",
-                "ZILLA NUR ANGGRAINI",
-                "FENY DWI ARIYANTI",
-                "PUTRI WIDIANA",
-                "SINTIA DARMA PUTRI",
-                "SRI INDARWATI",
-                "SYINBRAN FAJAR FATMA SARI",
-                "FRISCA FEBY ANABELA",
-                "AGUSTRIYA LESTARI",
-                "SYARIFAH CHAMAMI",
-                "IMAS PAMBAYU"
-            ],
-            'JMI': [
-                "ACKEMAD HARIANTO",
-                "LIANA SISWANTI",
-                "MUCHAMAD NUR AFANDI",
-                "PANJI RAHMAT DARMAWAN"
-            ],
-            '-': [
-                "-",
-                "Opsi 2"
-            ]
-        };
-
-        // Combine all unique operators for the 'Other' vendor option
-        const allOperatorsList = [];
-        for (const key in operatorLists) {
-            if (key !== '-') {
-                allOperatorsList.push(...operatorLists[key]);
-            }
-        }
-        operatorLists['Other'] = [...new Set(allOperatorsList)].sort();
-
-        // Update the select options dynamically based on the checked vendor
-        function updateOperatorOptions() {
-            const activeVendorRadio = document.querySelector('input[name="vendor"]:checked');
-            const vendorValue = activeVendorRadio ? activeVendorRadio.value : 'KWI';
-            
-            // Map selected vendor to the correct data list (or fallback to 'Other' if a custom vendor is typed)
-            const vendorKey = operatorLists.hasOwnProperty(vendorValue) ? vendorValue : 'Other';
-            const operators = operatorLists[vendorKey] || [];
-            
-            const selectEl = document.getElementById('operator_select');
-            if (!selectEl) return;
-            
-            const currentValue = selectEl.value;
-            
-            // Clear existing options, keep placeholder
-            selectEl.innerHTML = '<option value="" disabled selected>Choose</option>';
-            
-            // Populate new operator options
-            operators.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                selectEl.appendChild(option);
-            });
-            
-            // Restore selection if operator exists in the new vendor's list
-            if (currentValue && operators.includes(currentValue)) {
-                selectEl.value = currentValue;
-            }
-        }
-
-        // Highlight selected radio cards with dynamic styling
-        function updateRadioStyles() {
-            const cards = document.querySelectorAll('.radio-card');
-            cards.forEach(card => {
-                const input = card.querySelector('input');
-                const borderDiv = card.querySelector('.absolute');
-                if (input.checked) {
-                    card.classList.remove('border-slate-300');
-                    card.classList.add('border-primary-500');
-                } else {
-                    card.classList.remove('border-primary-500');
-                    card.classList.add('border-slate-300');
-                }
-            });
-        }
-
-        // Toggle custom text field for "Other" vendor
-        function toggleVendorOther() {
-            const otherRadio = document.querySelector('input[name="vendor"][value="Other"]');
-            const otherContainer = document.getElementById('vendorOtherContainer');
-            const otherInput = document.getElementById('vendor_other_text');
-            
-            if (otherRadio && otherRadio.checked) {
-                otherContainer.classList.remove('hidden');
-                otherInput.required = true;
-            } else {
-                otherContainer.classList.add('hidden');
-                otherInput.required = false;
-                otherInput.value = "";
-            }
-        }
-        
-        // Initial setup for radio stylings, vendor states, and dynamic operator options
-        updateRadioStyles();
-        toggleVendorOther();
-        updateOperatorOptions();
-
-        // Intercept form submit to override "Other" radio value with custom text
-        const form = document.getElementById("productionForm");
-        form.addEventListener("submit", function(e) {
-            const activeVendor = form.querySelector('input[name="vendor"]:checked');
-            if (activeVendor && activeVendor.value === 'Other') {
-                const customVendorText = document.getElementById('vendor_other_text').value.trim();
-                if (customVendorText) {
-                    activeVendor.value = customVendorText;
-                } else {
-                    alert('Silakan tuliskan nama vendor kustom terlebih dahulu.');
-                    e.preventDefault();
-                }
-            }
-        });
-
-        // Clear Form fields
-        function clearForm() {
-            if (confirm("Apakah Anda yakin ingin menyetel ulang seluruh isian formulir?")) {
-                // Clear text, number & textareas
-                form.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
-                    input.value = "";
-                });
-                
-                // Reset select dropdowns
-                form.querySelectorAll('select').forEach(select => {
-                    select.selectedIndex = 0;
-                });
-                
-                // Reset shift radios (default first checked)
-                const shiftRadios = form.querySelectorAll('input[name="shift"]');
-                shiftRadios.forEach((radio, index) => {
-                    radio.checked = (index === 0);
-                });
-
-                // Reset vendor radios (default first checked)
-                const vendorRadios = form.querySelectorAll('input[name="vendor"]');
-                vendorRadios.forEach((radio, index) => {
-                    radio.checked = (index === 0);
-                });
-                
-                // Reset date to today
-                const dateInput = form.querySelector('input[type="date"]');
-                if (dateInput) {
-                    const today = new Date().toISOString().split('T')[0];
-                    dateInput.value = today;
-                }
-                
-                updateRadioStyles();
-                toggleVendorOther();
-                updateOperatorOptions();
-            }
-        }
     </script>
 </body>
 </html>
