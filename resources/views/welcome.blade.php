@@ -85,18 +85,18 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Branding -->
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary-500 to-indigo-500 flex items-center justify-center text-white shadow-md">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary-500 to-indigo-500 flex items-center justify-center text-white shadow-md shrink-0">
                         <i data-lucide="activity" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-sm font-semibold tracking-wider text-slate-400 block uppercase leading-none font-outfit">Woundcare</span>
-                        <h1 class="text-base font-extrabold font-outfit tracking-tight text-white leading-tight">Woundcare Dashboard</h1>
+                        <span class="text-[9px] sm:text-xs font-semibold tracking-wider text-slate-400 block uppercase leading-none font-outfit">Woundcare</span>
+                        <h1 class="text-xs sm:text-base font-extrabold font-outfit tracking-tight text-white leading-tight"><span class="sm:inline hidden">Woundcare </span>Dashboard</h1>
                     </div>
                 </div>
                 
                 <!-- Logged In Operator & Logout -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 sm:gap-4 shrink-0">
                     @if(session('operator_role') === 'karyawan')
                     <div id="countdown-header" class="hidden md:flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/50 text-[10px] sm:text-[11px] font-semibold shrink-0">
                         <i id="countdown-icon" data-lucide="timer" class="w-3.5 h-3.5 text-amber-400 animate-pulse"></i>
@@ -106,8 +106,8 @@
 
                     <div class="hidden sm:flex flex-col text-right">
                         <span class="text-xs font-bold text-white">{{ session('operator_name') }}</span>
-                        <span class="text-2xs text-slate-450 uppercase tracking-widest font-semibold">
-                            {{ session('operator_vendor') }} &bull; {{ session('operator_role') == 'coordinator' ? 'Koordinator' : 'Karyawan' }}
+                        <span class="text-[10px] text-slate-450 uppercase tracking-widest font-semibold">
+                            {{ session('operator_vendor') }} &bull; Koordinator
                         </span>
                     </div>
                     <button type="button" onclick="openSettingsModal()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-700/50 transition-all shadow-md active:scale-95 shrink-0" title="Pengaturan">
@@ -115,9 +115,9 @@
                     </button>
                     <form action="{{ route('logout') }}" method="POST" class="inline shrink-0">
                         @csrf
-                        <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md active:scale-95">
+                        <button type="submit" class="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md active:scale-95" title="Keluar">
                             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                            <span>Keluar</span>
+                            <span class="hidden sm:inline">Keluar</span>
                         </button>
                     </form>
                 </div>
@@ -265,32 +265,32 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <!-- Widget 2: Pending Approval -->
                 <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
-                    <span class="text-3xs font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
+                    <span class="text-[10px] font-extrabold uppercase text-amber-600 tracking-wider block">Menunggu Persetujuan</span>
                     <h3 class="text-2xl font-bold font-outfit text-amber-800 mt-1">
                         {{ $reports->whereIn('status', ['pending', 'pending_late'])->count() }}
-                        <span class="text-2xs font-medium text-amber-500">laporan</span>
+                        <span class="text-xs font-semibold text-amber-500">laporan</span>
                     </h3>
-                    <span class="text-3xs text-amber-600 block mt-1">Harus diverifikasi oleh Koordinator</span>
+                    <span class="text-[10px] text-amber-600 block mt-1 leading-normal">Harus diverifikasi oleh Koordinator</span>
                 </div>
 
                 <!-- Widget 3: Approved -->
                 <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden">
-                    <span class="text-3xs font-extrabold uppercase text-emerald-600 tracking-wider block">Telah Disetujui</span>
+                    <span class="text-[10px] font-extrabold uppercase text-emerald-600 tracking-wider block">Telah Disetujui</span>
                     <h3 class="text-2xl font-bold font-outfit text-emerald-800 mt-1">
                         {{ $reports->where('status', 'approved')->count() }}
-                        <span class="text-2xs font-medium text-emerald-500">laporan</span>
+                        <span class="text-xs font-semibold text-emerald-500">laporan</span>
                     </h3>
-                    <span class="text-3xs text-emerald-600 block mt-1">Laporan terverifikasi & masuk rekapan</span>
+                    <span class="text-[10px] text-emerald-600 block mt-1 leading-normal">Laporan terverifikasi & masuk rekapan</span>
                 </div>
 
                 <!-- Widget 4: Rejected -->
                 <div class="bg-rose-50/45 p-4 rounded-xl border border-rose-200 shadow-sm relative overflow-hidden">
-                    <span class="text-3xs font-extrabold uppercase text-rose-600 tracking-wider block">Ditolak / Perlu Revisi</span>
+                    <span class="text-[10px] font-extrabold uppercase text-rose-600 tracking-wider block">Ditolak / Perlu Revisi</span>
                     <h3 class="text-2xl font-bold font-outfit text-rose-800 mt-1">
                         {{ $reports->where('status', 'rejected')->count() }}
-                        <span class="text-2xs font-medium text-rose-500">laporan</span>
+                        <span class="text-xs font-semibold text-rose-500">laporan</span>
                     </h3>
-                    <span class="text-3xs text-rose-600 block mt-1">Laporan dikembalikan ke Operator</span>
+                    <span class="text-[10px] text-rose-600 block mt-1 leading-normal">Laporan dikembalikan ke Operator</span>
                 </div>
             </div>
 
@@ -382,68 +382,84 @@
                         <i data-lucide="clipboard-list" class="w-5 h-5 text-primary-400"></i>
                         <h2 class="font-bold font-outfit text-white">Panel Verifikasi Laporan Kerja Karyawan</h2>
                     </div>
-                    <span class="text-2xs font-medium text-slate-300">Menampilkan {{ $reports->count() }} data</span>
+                    <span class="text-xs font-medium text-slate-300">Menampilkan {{ $reports->count() }} data</span>
                 </div>
 
                 <div class="divide-y divide-slate-100">
                     @forelse($reports as $report)
-                    <div class="p-4 sm:p-5 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="p-4 sm:p-5 hover:bg-slate-50/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4">
                         
                         <!-- Report Info -->
-                        <div class="space-y-2 flex-1">
+                        <div class="space-y-2.5 flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2 py-0.5 rounded text-3xs font-extrabold uppercase border {{ $report->shift == 'Shift 1' ? 'bg-sky-50 text-sky-700 border-sky-200' : ($report->shift == 'Shift 2' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-purple-50 text-purple-700 border-purple-200') }}">
-                                    {{ $report->shift }}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border {{ $report->shift == 'Shift 1' ? 'bg-sky-50 text-sky-700 border-sky-200' : ($report->shift == 'Shift 2' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-purple-50 text-purple-700 border-purple-200') }}">
+                                        {{ $report->shift }}
                                 </span>
-                                <span class="px-2 py-0.5 rounded bg-primary-50 text-primary-750 border border-primary-100 text-3xs font-extrabold uppercase">
+                                <span class="px-2 py-0.5 rounded bg-primary-50 text-primary-750 border border-primary-100 text-[10px] font-extrabold uppercase">
                                     {{ $report->vendor }}
                                 </span>
                                 
                                 <!-- Status Badge -->
                                 @if($report->status == 'approved')
-                                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-3xs font-bold border border-emerald-500/20 flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
                                     </span>
                                 @elseif($report->status == 'telat')
-                                    <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-3xs font-bold border border-emerald-600/20 flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 text-[10px] font-bold border border-emerald-600/20 flex items-center gap-1">
                                         <i data-lucide="clock" class="w-2.5 h-2.5"></i> Telat Laporan (Disetujui)
                                     </span>
                                 @elseif($report->status == 'pending_late')
-                                    <span class="px-2 py-0.5 rounded bg-amber-600/10 text-amber-700 text-3xs font-bold border border-amber-600/20 flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-amber-600/10 text-amber-700 text-[10px] font-bold border border-amber-600/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Telat (Menunggu ACC)
                                     </span>
                                 @elseif($report->status == 'rejected')
-                                    <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-3xs font-bold border border-rose-500/20 flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 text-[10px] font-bold border border-rose-500/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
                                     </span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 text-3xs font-bold border border-amber-500/20 flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[10px] font-bold border border-amber-500/20 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
                                     </span>
                                 @endif
                             </div>
 
-                            <h3 class="text-sm font-bold text-slate-800">
+                            <h3 class="text-sm font-bold text-slate-800 leading-tight">
                                 {{ $report->produk_yang_dikerjakan }} 
-                                <span class="text-xs text-slate-400 font-normal">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
+                                <span class="block sm:inline text-xs text-slate-400 font-normal sm:ml-1.5">({{ $report->jenis_produk }} - {{ $report->pengerjaan }})</span>
                             </h3>
 
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-xs text-slate-500">
-                                <div>Operator: <strong class="text-slate-700">{{ $report->operator }}</strong></div>
-                                <div>Tanggal Kerja: <strong class="text-slate-700">{{ \Carbon\Carbon::parse($report->tanggal)->format('d-m-Y') }}</strong></div>
-                                <div>Volume Hasil: <strong class="text-slate-800 text-sm font-extrabold">{{ number_format($report->hasil) }}</strong> {{ $report->satuan }}</div>
-                                <div>Waktu Kirim: <strong class="text-slate-700">{{ $report->created_at->format('H:i') }} Wib</strong></div>
+                            <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-slate-500 pt-1">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>Operator: <strong class="text-slate-800 font-semibold">{{ $report->operator }}</strong></span>
+                                </div>
+                                <span class="hidden sm:inline text-slate-350">&bull;</span>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>Tanggal Kerja: <strong class="text-slate-700 font-semibold">{{ \Carbon\Carbon::parse($report->tanggal)->format('d-m-Y') }}</strong></span>
+                                </div>
+                                <span class="hidden sm:inline text-slate-350">&bull;</span>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="box" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>Hasil: <strong class="text-slate-900 font-extrabold text-sm">{{ number_format($report->hasil) }}</strong> <span class="text-slate-500 font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide">{{ $report->satuan }}</span></span>
+                                </div>
+                                <span class="hidden sm:inline text-slate-350">&bull;</span>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>Waktu Kirim: <strong class="text-slate-700 font-semibold">{{ $report->created_at->format('H:i') }} WIB</strong></span>
+                                </div>
                             </div>
 
                             @if($report->keterangan)
-                                <p class="text-xs text-slate-500 italic bg-slate-50 border border-slate-200/50 rounded-lg p-2 max-w-2xl font-outfit">
-                                    "{{ $report->keterangan }}"
-                                </p>
+                                <div class="text-xs text-slate-550 italic bg-slate-50/50 border border-slate-200/40 rounded-lg py-2 px-3 max-w-xl font-outfit inline-flex items-center gap-1.5 leading-relaxed">
+                                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-450 shrink-0"></i>
+                                    <span>"{{ $report->keterangan }}"</span>
+                                </div>
                             @endif
 
                             @if($report->status == 'rejected' && $report->catatan_revisi)
-                                <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2">
-                                    <i data-lucide="message-square" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
+                                <div class="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-start gap-2 max-w-xl leading-normal">
+                                    <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
                                     <div>
                                         <span class="font-bold">Alasan Penolakan:</span> {{ $report->catatan_revisi }}
                                     </div>
@@ -456,13 +472,13 @@
                             @if($report->status === 'pending' || $report->status === 'pending_late')
                                 <form action="{{ route('wound-reports.approve', $report->id) }}" method="POST" class="w-full">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all">
+                                    <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98]">
                                         <i data-lucide="check" class="w-4 h-4"></i>
                                         <span>Setujui Laporan</span>
                                     </button>
                                 </form>
 
-                                <button onclick="openRejectDialog({{ $report->id }}, '{{ $report->operator }}', '{{ $report->produk_yang_dikerjakan }}')" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all">
+                                <button onclick="openRejectDialog({{ $report->id }}, '{{ $report->operator }}', '{{ $report->produk_yang_dikerjakan }}')" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98]">
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                     <span>Tolak / Minta Revisi</span>
                                 </button>
@@ -472,7 +488,7 @@
                             <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini secara permanen dari database?')" class="w-full">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-600 text-slate-500 text-xs font-semibold transition-all">
+                                <button type="submit" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-500 text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     <span>Hapus Permanen</span>
                                 </button>
@@ -1958,8 +1974,8 @@
     <!-- Footer -->
     <footer class="bg-slate-900 border-t border-slate-800 text-slate-400 py-6 mt-12 shrink-0">
         <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 text-center sm:flex sm:items-center sm:justify-between">
-            <span class="text-2xs block sm:inline">&copy; 2026 Woundcare. All rights reserved.</span>
-            <span class="text-3xs text-slate-500 block sm:inline mt-1 sm:mt-0 uppercase tracking-wider font-semibold font-outfit">Sistem Verifikasi & Proteksi Laporan Harian</span>
+            <span class="text-[11px] block sm:inline">&copy; 2026 Woundcare. All rights reserved.</span>
+            <span class="text-[10px] text-slate-500 block sm:inline mt-1 sm:mt-0 uppercase tracking-wider font-semibold font-outfit">Sistem Verifikasi & Proteksi Laporan Harian</span>
         </div>
     </footer>
 
