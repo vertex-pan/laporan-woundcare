@@ -1128,7 +1128,7 @@
                                             @endphp
                                             @if($activePin)
                                                 <div class="mt-1 flex items-center">
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase border border-emerald-200 animate-pulse" title="PIN Darurat Sementara Aktif">
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase border border-emerald-200 animate-pulse" title="PIN Login Sementara Aktif">
                                                         <i data-lucide="key" class="w-2.5 h-2.5"></i>
                                                         PIN: {{ $activePin }}
                                                     </span>
@@ -1164,11 +1164,11 @@
                                         <td class="py-3 px-4 text-right">
                                             <div class="flex flex-wrap items-center justify-end gap-1.5 min-w-[200px] md:min-w-0">
                                                 <!-- Generate Emergency PIN Button -->
-                                                <form action="{{ route('operators.generate-pin', $op->id) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Darurat Sementara untuk {{ $op->name }}? PIN ini akan aktif selama 20 menit.');">
+                                                <form action="{{ route('operators.generate-pin', $op->id) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Login Sementara untuk {{ $op->name }}? PIN ini akan aktif selama 20 menit.');">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all active:scale-95 text-[10px] font-bold" title="Generate PIN Darurat">
+                                                    <button type="submit" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all active:scale-95 text-[10px] font-bold" title="Generate PIN Login">
                                                         <i data-lucide="key" class="w-3.5 h-3.5 shrink-0"></i>
-                                                        <span>PIN Darurat</span>
+                                                        <span>PIN Login</span>
                                                     </button>
                                                 </form>
 
