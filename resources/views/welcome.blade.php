@@ -110,7 +110,10 @@
                             {{ session('operator_vendor') }} &bull; {{ session('operator_role') == 'coordinator' ? 'Koordinator' : 'Karyawan' }}
                         </span>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                    <button type="button" onclick="openSettingsModal()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-700/50 transition-all shadow-md active:scale-95 shrink-0" title="Pengaturan">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    </button>
+                    <form action="{{ route('logout') }}" method="POST" class="inline shrink-0">
                         @csrf
                         <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md active:scale-95">
                             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
@@ -775,10 +778,10 @@
                                     Tanggal Kerja <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-455">
                                         <i data-lucide="calendar" class="w-4 h-4"></i>
                                     </span>
-                                    <input type="date" name="tanggal" id="tanggal" required min="{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}" max="{{ now('Asia/Jakarta')->format('Y-m-d') }}" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ now('Asia/Jakarta')->format('Y-m-d') }}">
+                                    <input type="date" name="tanggal" id="tanggal" onchange="validateShiftSelection()" required min="{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}" max="{{ now('Asia/Jakarta')->format('Y-m-d') }}" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer" value="{{ now('Asia/Jakarta')->format('Y-m-d') }}">
                                 </div>
                             </div>
 
@@ -908,24 +911,7 @@
                             </div>
                         </div>
 
-                        <!-- SECTION 4: WhatsApp Notification -->
-                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
-                            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
-                                <i data-lucide="message-square" class="w-4 h-4 text-emerald-600"></i>
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 font-outfit">Notifikasi WhatsApp</h3>
-                            </div>
 
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-650 block">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
-                                        <i data-lucide="phone" class="w-4 h-4"></i>
-                                    </span>
-                                    <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 081234567890" value="{{ session('operator_whatsapp') }}" class="pl-10 w-full rounded-lg border border-slate-300 py-2.5 px-3.5 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
-                                </div>
-                                <p class="text-3xs text-slate-500">Penting: Masukkan nomor WA aktif Anda agar sistem dapat mengirimkan notifikasi revisi jika laporan ditolak oleh Koordinator.</p>
-                            </div>
-                        </div>
 
                         <!-- Action buttons wrapper -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-100 pt-5">
@@ -980,13 +966,10 @@
                                 </div>
 
                                 <!-- Action Buttons for Pending/Rejected reports -->
-                                <div class="flex items-center gap-1.5">
-                                    @if($report->status === 'rejected')
-                                        <button onclick="editReport({{ json_encode($report) }})" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-3xs font-bold flex items-center gap-1">
-                                            <i data-lucide="edit-2" class="w-3 h-3"></i>
-                                            <span>Revisi</span>
-                                        </button>
-                                    @endif
+                                    <button onclick="editReport({{ json_encode($report) }})" class="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all text-3xs font-bold flex items-center gap-1">
+                                        <i data-lucide="edit-2" class="w-3 h-3"></i>
+                                        <span>{{ $report->status === 'rejected' ? 'Revisi' : 'Edit' }}</span>
+                                    </button>
 
                                     @if($report->status !== 'approved')
                                         <form action="{{ route('wound-reports.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data laporan ini?')" class="inline">
@@ -1354,18 +1337,74 @@
                     }
                 }
 
-                // Validate if selected shift is active based on server time
+                // Map of submitted report keys passed from backend: { 'date|shift': report_id }
+                const submittedKeys = @json($submittedKeys ?? []);
+
+                // Validate if selected shift is active based on server time & duplicate submissions
                 function validateShiftSelection() {
                     const selectedRadio = document.querySelector('input[name="shift"]:checked');
                     if (!selectedRadio) return;
                     
                     const selectedName = selectedRadio.value;
+                    const dateInput = document.getElementById('tanggal');
+                    if (!dateInput) return;
+                    const selectedDate = dateInput.value;
+
                     const warningEl = document.getElementById('shift-warning');
                     const warningTextEl = document.getElementById('shift-warning-text');
                     if (!warningEl || !warningTextEl) return;
                     
+                    const reportIdEl = document.getElementById('report_id');
+                    const currentEditingId = reportIdEl ? reportIdEl.value : '';
+
+                    // Check for duplicate submission
+                    const key = `${selectedDate}|${selectedName}`;
+                    const existingId = submittedKeys[key];
+                    const isDuplicate = existingId && String(existingId) !== String(currentEditingId);
+
+                    const formInputs = [
+                        document.getElementById('pengerjaan'),
+                        document.getElementById('jenis_produk'),
+                        document.getElementById('produk_yang_dikerjakan'),
+                        document.getElementById('hasil'),
+                        document.getElementById('satuan'),
+                        document.getElementById('keterangan')
+                    ];
+                    const submitBtn = document.querySelector('#productionForm button[type="submit"]');
+
+                    if (isDuplicate) {
+                        // Disable inputs & gray out
+                        formInputs.forEach(input => {
+                            if (input) {
+                                input.disabled = true;
+                                input.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+                            }
+                        });
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+
+                        // Show duplicate warning message
+                        warningTextEl.innerHTML = `<strong>Laporan Terkirim:</strong> Laporan untuk <strong>${selectedName}</strong> pada tanggal <strong>${selectedDate}</strong> sudah diisi. Anda tidak bisa mengirimkan laporan ganda pada shift yang sama. Silakan lakukan edit/revisi melalui tabel <strong>Riwayat Laporan Saya</strong> di bagian kanan.`;
+                        warningEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Otherwise, re-enable inputs
+                    formInputs.forEach(input => {
+                        if (input) {
+                            input.disabled = false;
+                            input.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+                        }
+                    });
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+
                     // In edit/revision mode, bypass time lock warnings
-                    const isEditMode = document.getElementById('report_id') && document.getElementById('report_id').value !== '';
+                    const isEditMode = currentEditingId !== '';
                     if (isEditMode) {
                         warningEl.classList.add('hidden');
                         return;
@@ -1378,16 +1417,13 @@
                     
                     // Auto-adjust date picker based on selected shift (only if NOT in edit mode)
                     if (!isEditMode) {
-                        const dateInput = document.getElementById('tanggal');
-                        if (dateInput) {
-                            const todayDateStr = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
-                            const yesterdayDateStr = "{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}";
-                            
-                            if (selectedName === 'Shift 3' || selectedName === 'Lembur Shift 2') {
-                                dateInput.value = yesterdayDateStr;
-                            } else {
-                                dateInput.value = todayDateStr;
-                            }
+                        const todayDateStr = "{{ now('Asia/Jakarta')->format('Y-m-d') }}";
+                        const yesterdayDateStr = "{{ now('Asia/Jakarta')->subDay()->format('Y-m-d') }}";
+                        
+                        if (selectedName === 'Shift 3' || selectedName === 'Lembur Shift 2') {
+                            dateInput.value = yesterdayDateStr;
+                        } else {
+                            dateInput.value = todayDateStr;
                         }
                     }
                     
@@ -1435,6 +1471,74 @@
             <span class="text-3xs text-slate-500 block sm:inline mt-1 sm:mt-0 uppercase tracking-wider font-semibold font-outfit">Sistem Verifikasi & Proteksi Laporan Harian</span>
         </div>
     </footer>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden transform scale-95 transition-all duration-300">
+            <div class="bg-office-900 px-6 py-4 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-primary-400"></i>
+                    <h3 class="font-bold font-outfit text-sm uppercase tracking-wider">Pengaturan Profil</h3>
+                </div>
+                <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-white transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form action="{{ route('settings.whatsapp.update') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div class="space-y-1">
+                    <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider">Nama Operator</span>
+                    <p class="text-sm font-bold text-slate-800">{{ session('operator_name') }}</p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-3xs font-extrabold uppercase text-slate-400 tracking-wider">Vendor & Peran</span>
+                    <p class="text-xs font-semibold text-slate-650 uppercase">{{ session('operator_vendor') }} &bull; {{ session('operator_role') == 'coordinator' ? 'Koordinator' : 'Karyawan' }}</p>
+                </div>
+                
+                <hr class="border-slate-100 my-2">
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-750 block">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" name="whatsapp" id="settings_whatsapp" required placeholder="Contoh: 081234567890" value="{{ session('operator_whatsapp') }}" class="pl-10 w-full rounded-lg border border-slate-350 py-2.5 px-3.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    </div>
+                    <p class="text-3xs text-slate-500 leading-normal">Penting: Masukkan nomor WA aktif Anda agar sistem dapat mengirimkan notifikasi revisi jika laporan ditolak oleh Koordinator.</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-2">
+                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-500 font-semibold text-xs hover:bg-slate-50 transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-office-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-md transition-all">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.firstElementChild.classList.add('scale-95');
+            modal.firstElementChild.classList.remove('scale-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
 
     <script>
         // Initialize lucide icons for both layouts

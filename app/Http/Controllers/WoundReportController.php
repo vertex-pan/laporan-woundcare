@@ -64,7 +64,15 @@ class WoundReportController extends Controller
             'Lembur Shift 2' => ['work' => '18.00 - 06.00', 'window' => '04.00 - 07.00 (Besok)'],
         ];
 
-        return view('welcome', compact('reports', 'pengerjaans', 'jenisProduks', 'satuans', 'allOperators', 'shiftWindows'));
+        // Fetch submitted report keys (date|shift => ID) for the logged in operator
+        $submittedKeys = WoundReport::where('operator_id', session('operator_id'))
+            ->get(['tanggal', 'shift', 'id'])
+            ->mapWithKeys(function ($r) {
+                return [$r->tanggal . '|' . $r->shift => $r->id];
+            })
+            ->toArray();
+
+        return view('welcome', compact('reports', 'pengerjaans', 'jenisProduks', 'satuans', 'allOperators', 'shiftWindows', 'submittedKeys'));
     }
 
     public function store(Request $request)
@@ -83,17 +91,37 @@ class WoundReportController extends Controller
             'produk_yang_dikerjakan' => 'required|string|max:255',
             'satuan' => 'required|string|max:255',
             'keterangan' => 'required|string',
-            'whatsapp' => 'required|string|max:20',
         ]);
+
+        $op = Operator::find(session('operator_id'));
+        if (!$op || empty($op->whatsapp)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors('Nomor WhatsApp belum diatur. Silakan atur nomor WhatsApp aktif Anda terlebih dahulu di menu Pengaturan (ikon roda gigi di kanan atas) agar Anda bisa menerima notifikasi revisi.');
+        }
+
+        // Check for duplicate report (same operator, date, and shift)
+        $duplicateQuery = WoundReport::where('operator_id', session('operator_id'))
+            ->where('tanggal', $validated['tanggal'])
+            ->where('shift', $validated['shift']);
+
+        if ($request->filled('report_id')) {
+            $duplicateQuery->where('id', '!=', $request->report_id);
+        }
+
+        if ($duplicateQuery->exists()) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors('Duplikasi Laporan: Anda sudah mengirimkan laporan untuk Tanggal Kerja ' . $validated['tanggal'] . ' pada ' . $validated['shift'] . '. Anda tidak dapat mengirimkan laporan ganda pada shift yang sama. Silakan lakukan edit/revisi pada laporan yang sudah terdaftar di tabel Riwayat Laporan.');
+        }
 
         $role = session('operator_role');
         $shiftName = $validated['shift'];
 
-        // Check if this is a valid revision (resubmission of a rejected report by the owner)
+        // Check if this is a valid revision (resubmission/edit of an existing report by the owner)
         $isRevision = false;
         if ($request->filled('report_id')) {
             $isRevision = WoundReport::where('operator_id', session('operator_id'))
-                ->where('status', 'rejected')
                 ->where('id', $request->report_id)
                 ->exists();
         }
@@ -115,23 +143,12 @@ class WoundReportController extends Controller
         $validated['status'] = 'pending';
         $validated['catatan_revisi'] = null;
 
-        // 3. Update operator's WhatsApp number in DB and session
-        $whatsapp = $validated['whatsapp'];
-        unset($validated['whatsapp']);
-
-        $op = Operator::find(session('operator_id'));
-        if ($op) {
-            $op->update(['whatsapp' => $whatsapp]);
-            session(['operator_whatsapp' => $whatsapp]);
-        }
-
-        // If editing an existing report (e.g. resubmitting a rejected draft)
+        // If editing an existing report
         if ($request->filled('report_id')) {
             $report = WoundReport::where('operator_id', session('operator_id'))
-                ->where('status', 'rejected')
                 ->findOrFail($request->report_id);
             $report->update($validated);
-            return redirect()->route('dashboard')->with('success', 'Laporan revisi berhasil diajukan ulang.');
+            return redirect()->route('dashboard')->with('success', 'Laporan berhasil diperbarui.');
         }
 
         WoundReport::create($validated);
@@ -289,5 +306,21 @@ class WoundReportController extends Controller
         $operator->delete();
 
         return redirect()->back()->with('success', "Operator {$name} berhasil dihapus.");
+    }
+
+    public function updateMyWhatsapp(Request $request)
+    {
+        $request->validate([
+            'whatsapp' => 'required|string|max:20',
+        ]);
+
+        $operator = Operator::findOrFail(session('operator_id'));
+        $operator->update([
+            'whatsapp' => $request->whatsapp
+        ]);
+
+        session(['operator_whatsapp' => $request->whatsapp]);
+
+        return redirect()->back()->with('success', 'Nomor WhatsApp Anda berhasil diperbarui.');
     }
 }

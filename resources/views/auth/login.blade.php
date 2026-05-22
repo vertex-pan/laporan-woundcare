@@ -90,9 +90,47 @@
             </div>
             @endif
 
-            <!-- Google Sign-in Only -->
-            <div class="space-y-4">
-                <p class="text-xs text-slate-550 text-center mb-4">Silakan masuk menggunakan akun Google Anda untuk mengakses dasbor pelaporan.</p>
+            <!-- Login Options Tabs -->
+            <div class="flex border-b border-slate-100 mb-6">
+                <button type="button" onclick="switchTab('phone')" id="tab-phone" class="flex-1 pb-3 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-600 focus:outline-none transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
+                    Nomor WhatsApp
+                </button>
+                <button type="button" onclick="switchTab('google')" id="tab-google" class="flex-1 pb-3 text-sm font-bold text-primary-600 border-b-2 border-primary-600 focus:outline-none transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="chrome" class="w-4 h-4"></i>
+                    Akun Google
+                </button>
+            </div>
+
+            <!-- WhatsApp Login Form -->
+            <form id="form-phone" action="{{ route('login.phone') }}" method="POST" class="space-y-4 hidden" onsubmit="saveRememberedPhone()">
+                @csrf
+                <div class="space-y-1.5">
+                    <label for="whatsapp" class="text-xs font-bold text-slate-655 block">Nomor WhatsApp Terdaftar</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
+                            <i data-lucide="phone" class="w-4.5 h-4.5"></i>
+                        </span>
+                        <input type="text" name="whatsapp" id="whatsapp" required placeholder="Contoh: 08123456789" value="{{ old('whatsapp') }}" class="pl-10 w-full rounded-xl border border-slate-350 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    </div>
+                    <p class="text-3xs text-slate-500 leading-normal">Gunakan nomor WhatsApp aktif Anda yang sudah terdaftar di sistem.</p>
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="flex items-center mt-2.5">
+                    <input id="remember_me" name="remember_me" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded cursor-pointer transition-all">
+                    <label for="remember_me" class="ml-2 block text-xs text-slate-650 cursor-pointer select-none font-semibold">Ingat Nomor Saya</label>
+                </div>
+
+                <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-office-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Masuk Aplikasi</span>
+                </button>
+            </form>
+
+            <!-- Google Sign-in Option -->
+            <div id="form-google" class="space-y-4">
+                <p class="text-xs text-slate-555 text-center mb-4 leading-normal">Silakan masuk menggunakan akun Google Anda yang telah terhubung ke profil operator Anda.</p>
                 
                 <a href="{{ route('auth.google') }}" class="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 rounded-xl shadow-sm bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all active:scale-[0.98]">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
@@ -118,6 +156,64 @@
     <script>
         // Init Lucide
         lucide.createIcons();
+
+        function switchTab(type) {
+            const tabPhone = document.getElementById('tab-phone');
+            const tabGoogle = document.getElementById('tab-google');
+            const formPhone = document.getElementById('form-phone');
+            const formGoogle = document.getElementById('form-google');
+
+            if (type === 'phone') {
+                tabPhone.classList.add('text-primary-600', 'border-primary-600', 'font-bold');
+                tabPhone.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
+                tabGoogle.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
+                tabGoogle.classList.remove('text-primary-600', 'border-primary-600', 'font-bold');
+                
+                formPhone.classList.remove('hidden');
+                formGoogle.classList.add('hidden');
+            } else {
+                tabGoogle.classList.add('text-primary-600', 'border-primary-600', 'font-bold');
+                tabGoogle.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
+                tabPhone.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
+                tabPhone.classList.remove('text-primary-600', 'border-primary-600', 'font-bold');
+                
+                formGoogle.classList.remove('hidden');
+                formPhone.classList.add('hidden');
+            }
+        }
+
+        // Remember phone number logic
+        const phoneInput = document.getElementById('whatsapp');
+        const rememberCheckbox = document.getElementById('remember_me');
+
+        if (phoneInput && rememberCheckbox) {
+            const rememberedPhone = localStorage.getItem('remembered_whatsapp');
+            if (rememberedPhone) {
+                phoneInput.value = rememberedPhone;
+                rememberCheckbox.checked = true;
+            }
+        }
+
+        function saveRememberedPhone() {
+            if (phoneInput && rememberCheckbox) {
+                if (rememberCheckbox.checked) {
+                    localStorage.setItem('remembered_whatsapp', phoneInput.value);
+                } else {
+                    localStorage.removeItem('remembered_whatsapp');
+                }
+            }
+        }
+
+        // Default tab selection logic:
+        // Default to Google, but switch to phone tab if there are errors or old input
+        const hasErrors = @json($errors->any());
+        const hasOldInput = @json(old('whatsapp') !== null);
+
+        if (hasErrors || hasOldInput) {
+            switchTab('phone');
+        } else {
+            switchTab('google');
+        }
     </script>
 </body>
 </html>

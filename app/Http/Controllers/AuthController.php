@@ -28,6 +28,46 @@ class AuthController extends Controller
         return view('auth.login', compact('coordinators', 'staffs', 'googleEnabled'));
     }
 
+    public function loginByPhone(Request $request)
+    {
+        $request->validate([
+            'whatsapp' => 'required|string',
+        ]);
+
+        $phone = preg_replace('/[^0-9]/', '', $request->whatsapp);
+
+        if (empty($phone)) {
+            return redirect()->back()->withInput()->withErrors('Nomor WhatsApp tidak valid.');
+        }
+
+        // Standardize formats for lookup (matching suffix)
+        $corePhone = $phone;
+        if (str_starts_with($phone, '62')) {
+            $corePhone = substr($phone, 2);
+        } elseif (str_starts_with($phone, '0')) {
+            $corePhone = substr($phone, 1);
+        }
+
+        $operator = Operator::where(function($q) use ($phone, $corePhone) {
+            $q->where('whatsapp', $phone)
+              ->orWhere('whatsapp', 'like', '%' . $corePhone);
+        })->first();
+
+        if (!$operator) {
+            return redirect()->back()->withInput()->withErrors('Nomor WhatsApp Anda belum terdaftar. Silakan hubungi Koordinator.');
+        }
+
+        session([
+            'operator_id' => $operator->id,
+            'operator_name' => $operator->name,
+            'operator_vendor' => $operator->vendor,
+            'operator_role' => $operator->role,
+            'operator_whatsapp' => $operator->whatsapp,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Berhasil masuk sebagai ' . $operator->name);
+    }
+
     public function loginBypass(Request $request)
     {
         $request->validate([

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login/phone', [AuthController::class, 'loginByPhone'])->name('login.phone');
 Route::post('/login/bypass', [AuthController::class, 'loginBypass'])->name('login.bypass');
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
@@ -20,6 +21,9 @@ Route::middleware(['operator.auth'])->group(function () {
     Route::get('/', [WoundReportController::class, 'index'])->name('dashboard');
     Route::post('/wound-reports', [WoundReportController::class, 'store'])->name('wound-reports.store');
     Route::delete('/wound-reports/{id}', [WoundReportController::class, 'destroy'])->name('wound-reports.destroy');
+    
+    // Setting route
+    Route::post('/settings/whatsapp', [WoundReportController::class, 'updateMyWhatsapp'])->name('settings.whatsapp.update');
     
     // Coordinator approval routes
     Route::post('/wound-reports/{id}/approve', [WoundReportController::class, 'approve'])->name('wound-reports.approve');
