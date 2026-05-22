@@ -1266,6 +1266,7 @@
                     document.getElementById('report_id').value = '';
                     document.getElementById('editBanner').classList.add('hidden');
                     clearFormFields();
+                    validateShiftSelection();
                 }
 
                 function clearFormFields() {
@@ -1283,6 +1284,7 @@
                         clearFormFields();
                         document.getElementById('report_id').value = '';
                         document.getElementById('editBanner').classList.add('hidden');
+                        validateShiftSelection();
                     }
                 }
 
@@ -1362,13 +1364,19 @@
                     const warningTextEl = document.getElementById('shift-warning-text');
                     if (!warningEl || !warningTextEl) return;
                     
+                    // In edit/revision mode, bypass time lock warnings
+                    const isEditMode = document.getElementById('report_id') && document.getElementById('report_id').value !== '';
+                    if (isEditMode) {
+                        warningEl.classList.add('hidden');
+                        return;
+                    }
+                    
                     if (typeof serverTime === 'undefined' || !serverTime) {
                         warningEl.classList.add('hidden');
                         return;
                     }
                     
                     // Auto-adjust date picker based on selected shift (only if NOT in edit mode)
-                    const isEditMode = document.getElementById('report_id') && document.getElementById('report_id').value !== '';
                     if (!isEditMode) {
                         const dateInput = document.getElementById('tanggal');
                         if (dateInput) {

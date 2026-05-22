@@ -89,8 +89,17 @@ class WoundReportController extends Controller
         $role = session('operator_role');
         $shiftName = $validated['shift'];
 
-        // 1. Strict time lock for Karyawan
-        if ($role === 'karyawan') {
+        // Check if this is a valid revision (resubmission of a rejected report by the owner)
+        $isRevision = false;
+        if ($request->filled('report_id')) {
+            $isRevision = WoundReport::where('operator_id', session('operator_id'))
+                ->where('status', 'rejected')
+                ->where('id', $request->report_id)
+                ->exists();
+        }
+
+        // 1. Strict time lock for Karyawan (bypassed for revisions)
+        if ($role === 'karyawan' && !$isRevision) {
             $windowCheck = $this->checkShiftWindow($shiftName);
             if (!$windowCheck['allowed']) {
                 return redirect()->back()
