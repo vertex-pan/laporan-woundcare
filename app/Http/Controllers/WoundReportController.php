@@ -463,15 +463,30 @@ class WoundReportController extends Controller
                 $sheet = $spreadsheet->getActiveSheet();
                 $sheet->setTitle('Laporan');
                 
-                // Write header
+                // Write title banner (merged A2:M3)
+                $sheet->mergeCells('A2:M3');
+                $sheet->setCellValue('A2', 'LAPORAN PRODUKSI WOUNDCARE');
+                $sheet->getStyle('A2')->getFont()->setSize(16)->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF1565C0'));
+                $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                
+                // Style banner background and outline border
+                $sheet->getStyle('A2:M3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFE3F2FD');
+                $sheet->getStyle('A2:M3')->getBorders()->getOutline()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM)->getColor()->setARGB('FF1565C0');
+                
+                // Set heights
+                $sheet->getRowDimension(2)->setRowHeight(20);
+                $sheet->getRowDimension(3)->setRowHeight(20);
+                $sheet->getRowDimension(4)->setRowHeight(12); // spacer row
+                
+                // Write header in Row 5
                 foreach ($columns as $colIndex => $colName) {
-                    $sheet->setCellValue($colLetters[$colIndex] . '1', $colName);
+                    $sheet->setCellValue($colLetters[$colIndex] . '5', $colName);
                 }
                 
                 // Style header
-                $headerRange = 'A1:M1';
+                $headerRange = 'A5:M5';
                 $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-                $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF4C1F7A');
+                $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF1565C0');
                 
                 foreach ($colLetters as $letter) {
                     $sheet->getColumnDimension($letter)->setAutoSize(true);
@@ -488,23 +503,42 @@ class WoundReportController extends Controller
                     // Set title (max 31 characters)
                     $sheet->setTitle(substr($monthYear, 0, 31));
                     
-                    // Color the sheet tab accent to match the purple theme
-                    $sheet->getTabColor()->setARGB('FF4C1F7A');
+                    // Color the sheet tab accent to match the Material Blue theme
+                    $sheet->getTabColor()->setARGB('FF1565C0');
                     
-                    // Freeze first row so header remains visible on scroll
-                    $sheet->freezePane('A2');
+                    // 1. Title Banner Block (Row 2-3 Merged)
+                    $sheet->mergeCells('A2:M3');
+                    $sheet->setCellValue('A2', 'LAPORAN PRODUKSI WOUNDCARE');
+                    $sheet->getStyle('A2')->getFont()->setSize(16)->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF1565C0'));
+                    $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                    
+                    // Style banner background and outline border
+                    $sheet->getStyle('A2:M3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFE3F2FD');
+                    $sheet->getStyle('A2:M3')->getBorders()->getOutline()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM)->getColor()->setARGB('FF1565C0');
+                    
+                    // Set row heights for elegant spacing
+                    $sheet->getRowDimension(2)->setRowHeight(20);
+                    $sheet->getRowDimension(3)->setRowHeight(20);
+                    $sheet->getRowDimension(4)->setRowHeight(12); // spacer row
+                    
+                    // Freeze first row of data so header remains visible on scroll
+                    $sheet->freezePane('A6');
                     
                     // Set header row height for breathing room
-                    $sheet->getRowDimension(1)->setRowHeight(28);
+                    $sheet->getRowDimension(5)->setRowHeight(28);
                     
-                    // Write header
+                    // Write header in Row 5
                     foreach ($columns as $colIndex => $colName) {
-                        $sheet->setCellValue($colLetters[$colIndex] . '1', $colName);
+                        $sheet->setCellValue($colLetters[$colIndex] . '5', $colName);
                     }
                     
-                    // Write data
-                    $row = 2;
-                    foreach ($monthReports as $report) {
+                    // Write data starting at Row 6
+                    $row = 6;
+                    $reportsArray = $monthReports->values()->all();
+                    $totalReports = count($reportsArray);
+                    
+                    for ($i = 0; $i < $totalReports; $i++) {
+                        $report = $reportsArray[$i];
                         $email = $report->operatorRelation ? $report->operatorRelation->email : '';
                         
                         // Set row height for elegant spacing
@@ -525,9 +559,9 @@ class WoundReportController extends Controller
                         $sheet->setCellValue('L' . $row, $report->keterangan);
                         $sheet->setCellValue('M' . $row, ucfirst($report->status));
                         
-                        // Zebra Striping (ultra soft purple-gray for even rows on columns A-L)
+                        // Zebra Striping (ultra soft blue-gray for even rows on columns A-L)
                         if ($row % 2 === 0) {
-                            $sheet->getStyle('A' . $row . ':L' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFFBF9FC');
+                            $sheet->getStyle('A' . $row . ':L' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFF4F9FF');
                         }
                         
                         // Status styling with elegant pastel badges (Column M)
@@ -552,40 +586,58 @@ class WoundReportController extends Controller
                         $sheet->getColumnDimension($letter)->setAutoSize(true);
                     }
                     
-                    // Style the header row (Solid Dark Purple Hex #4C1F7A background with White bold text)
-                    $headerRange = 'A1:M1';
+                    // Style the header row (Solid Material Blue Hex #1565C0 background with White bold text)
+                    $headerRange = 'A5:M5';
                     $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-                    $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF4C1F7A');
+                    $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF1565C0');
                     
                     // Center align header horizontally and vertically
                     $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                     
                     // Style borders, grid gridlines, and alignments
-                    if ($row > 2) {
-                        // Apply thin borders
-                        $sheet->getStyle('A1:M' . ($row - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setARGB('FFD3D3D3');
+                    if ($row > 6) {
+                        // Apply thin borders starting from Row 5
+                        $sheet->getStyle('A5:M' . ($row - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setARGB('FFD3D3D3');
+                        
+                        // Apply elegant double bottom border as day separators (overlayed on top of grid borders)
+                        $rowTracker = 6;
+                        for ($i = 0; $i < $totalReports; $i++) {
+                            $report = $reportsArray[$i];
+                            $currentDate = \Carbon\Carbon::parse($report->tanggal)->format('Y-m-d');
+                            $nextReport = ($i + 1 < $totalReports) ? $reportsArray[$i + 1] : null;
+                            
+                            if ($nextReport) {
+                                $nextDate = \Carbon\Carbon::parse($nextReport->tanggal)->format('Y-m-d');
+                                if ($currentDate !== $nextDate) {
+                                    $sheet->getStyle('A' . $rowTracker . ':M' . $rowTracker)->getBorders()->getBottom()
+                                        ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOUBLE)
+                                        ->getColor()->setARGB('FF1565C0');
+                                }
+                            }
+                            $rowTracker++;
+                        }
                         
                         // Format volume column (Hasil) with thousands separator
-                        $sheet->getStyle('J2:J' . ($row - 1))->getNumberFormat()->setFormatCode('#,##0');
+                        $sheet->getStyle('J6:J' . ($row - 1))->getNumberFormat()->setFormatCode('#,##0');
                         
                         // Center-align columns: C (Tanggal), D (Shift), F (Vendor), K (Satuan), M (Status)
-                        $sheet->getStyle('C2:C' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                        $sheet->getStyle('D2:D' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                        $sheet->getStyle('F2:F' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                        $sheet->getStyle('K2:K' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                        $sheet->getStyle('M2:M' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('C6:C' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('D6:D' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('F6:F' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('K6:K' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('M6:M' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                         
                         // Apply professional padding/indent for left-aligned columns (Prevent text touching lines)
                         $leftAlignedCols = ['A', 'B', 'E', 'G', 'H', 'I', 'L'];
                         foreach ($leftAlignedCols as $col) {
-                            $sheet->getStyle($col . '2:' . $col . ($row - 1))->getAlignment()->setIndent(1);
+                            $sheet->getStyle($col . '6:' . $col . ($row - 1))->getAlignment()->setIndent(1);
                         }
                         
-                        // Apply standard Excel Auto-Filter dropdown arrows
-                        $sheet->setAutoFilter('A1:M' . ($row - 1));
+                        // Apply standard Excel Auto-Filter dropdown arrows on Row 5
+                        $sheet->setAutoFilter('A5:M' . ($row - 1));
                         
                         // Vertically align all data rows to center
-                        $sheet->getStyle('A2:M' . ($row - 1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                        $sheet->getStyle('A6:M' . ($row - 1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                     }
                     
                     $sheetIndex++;
