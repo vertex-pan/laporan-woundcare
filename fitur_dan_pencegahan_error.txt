@@ -1,0 +1,148 @@
+================================================================================
+            FITUR CANGGIH & PENCEGAHAN HUMAN ERROR (DETAIL TEKNIS)
+================================================================================
+
+Dokumen ini menjelaskan detail cara kerja dan fungsionalitas sistem yang berjalan 
+pada Aplikasi Laporan Produksi Woundcare untuk memastikan keamanan data, nol 
+kesalahan input (Zero Human Error), serta efisiensi operasional.
+
+--------------------------------------------------------------------------------
+1. SISTEM PENCEGAHAN HUMAN ERROR (Akurasi Data Maksimal)
+--------------------------------------------------------------------------------
+
+* Penyesuaian Tanggal Otomatis (Auto-Adjust H-1 Date):
+  - Cara Kerja: Untuk karyawan Shift 3 (22.00 - 06.00) dan Lembur Shift 2 
+    (18.00 - 06.00), laporan biasanya baru diisi keesokan harinya di pagi hari 
+    (pukul 04.00 - 07.00). Kebanyakan operator sering salah memilih tanggal 
+    "Hari Ini" (saat mengetik) alih-alih tanggal kerja riil ("Kemarin").
+  - Solusi: Begitu operator memilih opsi Shift 3 atau Lembur Shift 2 pada form, 
+    JavaScript langsung memundurkan input tanggal otomatis ke H-1 (Kemarin). 
+    Untuk shift lainnya, tanggal otomatis disetel ke hari ini.
+
+* Proteksi Duplikasi & Kunci Input Layar (Real-time Duplicate & Form Lock):
+  - Cara Kerja: Sistem memvalidasi apakah operator sudah pernah mengirimkan 
+    laporan untuk kombinasi tanggal kerja dan shift yang sama di database.
+  - Solusi: Jika data ganda terdeteksi (misal operator mencoba mengisi ulang), 
+    frontend langsung memunculkan pesan peringatan merah. Seluruh form input 
+    (pengerjaan, jenis produk, nama produk, hasil, satuan, keterangan) akan 
+    otomatis dinonaktifkan (disabled), diubah warnanya menjadi abu-abu, dan 
+    tombol submit dikunci secara real-time sebelum form sempat dikirim.
+  - Tambahan: Sistem memetakan shift reguler dan lebur (Shift 1 & Lembur Shift 1, 
+    serta Shift 2 & Lembur Shift 2) sebagai grup yang saling mengecualikan. 
+    Operator yang sudah mengisi Shift 1 tidak bisa lagi mengisi Lembur Shift 1.
+
+* Pembersihan Tanda Titik Ribuan Otomatis (Input Sanitization):
+  - Cara Kerja: Saat mengisi jumlah output/hasil kerja, operator terbiasa 
+    mengetik menggunakan tanda titik ribuan (misal: "12.500" untuk 12 ribu). 
+    Secara sistem database, format string bertitik ini akan terpotong atau 
+    gagal divalidasi sebagai tipe data integer (terbaca salah menjadi "12").
+  - Solusi: Di sisi backend, sebelum data divalidasi, sistem secara otomatis 
+    menghapus tanda titik tersebut menggunakan perintah pembersihan string 
+    (mengubah "12.500" menjadi "12500" murni) agar tersimpan dengan tepat.
+
+* Pemformatan Angka Secara Live (Live Auto-Formatting):
+  - Cara Kerja: Operator kadang salah melihat jumlah angka nol (0) saat mengetik.
+  - Solusi: Input kolom "Hasil" dilengkapi dengan JavaScript format lokal 
+    (id-ID) yang secara dinamis menambahkan titik ribuan di layar secara 
+    real-time ketika operator sedang mengetik (misal diketik "100000" langsung 
+    berubah visualnya menjadi "100.000").
+
+* Penguncian Tombol Kirim Ganda (Double-Submit Prevention):
+  - Cara Kerja: Di area dengan jaringan seluler/internet lambat, operator sering 
+    menekan tombol kirim berkali-kali karena dikira tidak merespons, yang 
+    mengakibatkan pengiriman data ganda di server.
+  - Solusi: Begitu tombol "Ajukan Laporan" diklik sekali, JavaScript langsung 
+    mengunci tombol tersebut (disabled) dan mengubah teksnya menjadi animasi 
+    loading spinner ("Mengirim Laporan...") hingga proses submit selesai.
+
+
+--------------------------------------------------------------------------------
+2. FITUR PENGOPERASIAN CANGGIH & REKAPITULASI PINTAR
+--------------------------------------------------------------------------------
+
+* Pemilihan Shift Otomatis (Auto-Select Active Shift):
+  - Cara Kerja: Saat halaman form dibuka pertama kali, sistem mencocokkan jam 
+    server aktual dengan jadwal batas pelaporan masing-masing shift.
+  - Solusi: Radio button shift yang sedang berjalan pada saat itu otomatis 
+    tercentang (checked) secara default, sehingga mempercepat proses pengisian.
+
+* Penguncian Waktu Pengisian Shift (Strict Time Lock Windows):
+  - Cara Kerja: Untuk memastikan kedisiplinan dan keaslian data, karyawan hanya 
+    diizinkan mengisi laporan pada waktu sempit di akhir jam kerja shift mereka:
+    - Shift 1 (Kerja: 06.00-14.00)  -> Buka laporan: 12.00 - 15.00 WIB.
+    - Shift 2 (Kerja: 14.00-22.00)  -> Buka laporan: 20.00 - 23.00 WIB.
+    - Shift 3 (Kerja: 22.00-06.00)  -> Buka laporan: 04.00 - 07.00 WIB.
+    - Lembur 1 (Kerja: 06.00-18.00) -> Buka laporan: 16.00 - 19.00 WIB.
+    - Lembur 2 (Kerja: 18.00-06.00) -> Buka laporan: 04.00 - 07.00 WIB.
+  - Solusi: Backend secara ketat menolak pengiriman data baru di luar jam-jam 
+    tersebut, kecuali untuk laporan status "Revisi/Edit" dari Koordinator.
+
+* PIN Darurat Lupa Bawa HP (Forgotten Phone Login Bypass):
+  - Cara Kerja: Karyawan yang tidak membawa handphone atau tidak memiliki akses 
+    ke WhatsApp/Google tidak akan bisa melakukan login via Magic Link maupun Google Sign-In.
+  - Solusi: Koordinator dapat men-generate PIN Darurat 6-digit secara fisik 
+    di panel admin (berlaku 20 menit sekali pakai). Karyawan tersebut dapat 
+    menggunakannya untuk masuk/login ke sistem secara aman.
+  - Catatan Penting: PIN ini HANYA mem-bypass gerbang login (otentikasi). 
+    Karyawan yang masuk dengan PIN ini tetap terikat aturan batas waktu (Time Lock) 
+    shift kerja biasa, sehingga mereka tetap tidak bisa mengirimkan laporan baru jika 
+    jam shift-nya sudah ditutup secara resmi (kecuali jika melakukan revisi).
+
+* Notifikasi WhatsApp Real-Time (Wablas API Integration):
+  - Cara Kerja: Saat ada data salah, Koordinator dapat melakukan penolakan 
+    laporan kerja karyawan dan menyertakan umpan balik (Catatan Revisi).
+  - Solusi: Sistem otomatis menyusun pesan notifikasi bertemplate rapi yang 
+    dikirim langsung ke WhatsApp karyawan melalui Wablas API, berisi detail 
+    produk, shift, dan isi catatan revisi spesifik agar segera diperbaiki.
+
+* Ekspor Excel Tematik Khas Google Sheet (Professional Multi-Sheet Excel):
+  - Cara Kerja: Mempermudah Koordinator melakukan pelaporan data ke manajemen.
+  - Solusi: File Excel yang diunduh diformat secara elegan:
+    a. Pengelompokan data otomatis per tab/sheet berdasarkan Bulan & Tahun.
+    b. Header berwarna biru korporat (#1565C0) dengan teks putih tebal.
+    c. Format angka ribuan bawaan Excel pada kolom volume hasil pengerjaan.
+    d. Pewarnaan badge status pastel yang indah: Hijau muda (Approved), 
+       Kuning/Oranye muda (Pending), dan Merah muda (Rejected).
+    e. Pembatas garis ganda otomatis (Double Bottom Border) biru sebagai 
+       penanda pergantian hari kerja agar dokumen sangat mudah dibaca.
+
+
+--------------------------------------------------------------------------------
+3. SISTEM KEAMANAN & LOGIN CERDAS (Secure Authentication)
+--------------------------------------------------------------------------------
+
+* Tautan Masuk Ajaib Tanpa Kata Sandi (WhatsApp Magic Link Login):
+  - Cara Kerja: Menghilangkan risiko lupa password atau pencurian kredensial.
+  - Solusi: Pengguna cukup memasukkan nomor WhatsApp terdaftar. Sistem akan 
+    membuat token acak sepanjang 40 karakter yang disimpan di Cache server 
+    selama 10 menit. Link login dikirim otomatis ke WA pengguna. Begitu link 
+    diklik, sistem memverifikasi token tersebut, menghapus token dari Cache 
+    (sekali pakai), dan otomatis memasukkan pengguna ke sistem.
+
+* Integrasi Akun Google Sekali Klik (Google OAuth 2.0):
+  - Cara Kerja: Memanfaatkan sistem login Google Socialite yang sangat aman.
+  - Solusi: Operator dapat masuk ke aplikasi secara instan menggunakan email 
+    Google terverifikasi dengan satu kali ketukan tombol "Login Google".
+
+* Tautan Akun Pertama Kali (Google Profile Pairing):
+  - Cara Kerja: Memastikan email Google pribadi terhubung ke profil yang benar.
+  - Solusi: Jika email Google pengguna belum terdaftar, sistem akan menahan 
+    proses masuk dan mengarahkan ke halaman profil khusus di mana pengguna 
+    dapat menautkan email Google pribadinya secara aman ke nama operator mereka.
+
+* Ingat Sesi Masuk 30 Hari (Secure Cookie Persistence):
+  - Cara Kerja: Mencegah operator berulang kali meminta tautan WA setiap hari.
+  - Solusi: Setelah berhasil login secara sah, sistem akan menyimpan cookie 
+    keamanan terenkripsi berdurasi 30 hari (`remember_operator_id`). Sesi akan 
+    tetap aktif secara aman dan lancar di perangkat operator.
+
+* Putus Tautan Google (Google Link Reset):
+  - Cara Kerja: Antisipasi apabila handphone karyawan hilang atau berganti email.
+  - Solusi: Koordinator dapat menekan tombol reset pada tabel admin untuk 
+    mengubah kolom email operator kembali menjadi NULL, sehingga operator bisa 
+    mendaftarkan email Google baru dengan aman.
+
+================================================================================
+Dokumen ini disusun untuk panduan audit fungsionalitas sistem.
+Seluruh hak cipta dan logika keamanan dilindungi penuh dalam kode aplikasi.
+================================================================================

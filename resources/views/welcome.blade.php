@@ -189,6 +189,11 @@
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
+        <script>
+            // Clear draft in localStorage on successful submission
+            localStorage.removeItem('woundcare_production_draft');
+            localStorage.removeItem('woundcare_production_draft_time');
+        </script>
         @endif
 
         @if($errors->any())
@@ -823,6 +828,23 @@
                         <!-- Hidden ID for edit mode -->
                         <input type="hidden" name="report_id" id="report_id" value="">
 
+                        <!-- Draft Auto-Saved Alert Banner -->
+                        <div id="draft-alert" class="hidden p-4 rounded-xl bg-gradient-to-r from-primary-50/80 to-sky-50/50 border border-primary-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-300 animate-fade-in">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary-100/80 text-primary-750 flex items-center justify-center shrink-0 shadow-sm">
+                                    <i data-lucide="archive" class="w-4 h-4 animate-pulse text-primary-600"></i>
+                                </div>
+                                <div class="text-left">
+                                    <h4 class="text-xs font-bold text-primary-950 font-outfit uppercase tracking-wider leading-none">Draft Tersimpan Otomatis</h4>
+                                    <p class="text-2xs text-primary-800 mt-1">Kemajuan pengisian dipulihkan. Tersimpan pada: <strong id="draft-timestamp" class="font-bold text-primary-900">...</strong></p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="clearDraftManual()" class="w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 hover:border-rose-300 text-rose-600 hover:text-rose-700 hover:bg-rose-50 text-[10px] font-bold rounded-lg shadow-sm transition-all active:scale-95">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Hapus Draft</span>
+                            </button>
+                        </div>
+
                         <!-- SECTION 1: Waktu & Shift -->
                         <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-4">
                             <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2 mb-1">
@@ -1343,6 +1365,9 @@
                     document.getElementById('report_id').value = '';
                     document.getElementById('editBanner').classList.add('hidden');
                     clearFormFields();
+                    if (typeof loadDraft === 'function') {
+                        loadDraft();
+                    }
                     validateShiftSelection();
                 }
 
@@ -1361,6 +1386,15 @@
                         clearFormFields();
                         document.getElementById('report_id').value = '';
                         document.getElementById('editBanner').classList.add('hidden');
+                        
+                        // Clear draft keys from localStorage
+                        localStorage.removeItem('woundcare_production_draft');
+                        localStorage.removeItem('woundcare_production_draft_time');
+                        const draftBanner = document.getElementById('draft-alert');
+                        if (draftBanner) {
+                            draftBanner.classList.add('hidden');
+                        }
+                        
                         validateShiftSelection();
                     }
                 }
@@ -1570,6 +1604,148 @@
                 // Run on page load
                 autoSelectActiveShift();
                 validateShiftSelection();
+
+                // ==========================================
+                // AUTO-DRAFT ENGINE & EVENT LISTENERS
+                // ==========================================
+                const DRAFT_KEY = 'woundcare_production_draft';
+                const DRAFT_TIME_KEY = 'woundcare_production_draft_time';
+
+                function saveDraft() {
+                    const reportId = document.getElementById('report_id').value;
+                    if (reportId) return; // Do not overwrite draft when in edit mode
+
+                    const selectedShift = document.querySelector('input[name="shift"]:checked')?.value || '';
+
+                    const data = {
+                        tanggal: document.getElementById('tanggal').value,
+                        shift: selectedShift,
+                        pengerjaan: document.getElementById('pengerjaan').value,
+                        jenis_produk: document.getElementById('jenis_produk').value,
+                        produk_yang_dikerjakan: document.getElementById('produk_yang_dikerjakan').value,
+                        hasil: document.getElementById('hasil').value,
+                        satuan: document.getElementById('satuan').value,
+                        keterangan: document.getElementById('keterangan').value
+                    };
+
+                    // Only save if the operator has typed at least one custom field
+                    const hasTyping = data.pengerjaan || data.jenis_produk || data.produk_yang_dikerjakan || data.hasil || data.satuan || data.keterangan;
+                    if (!hasTyping) return;
+
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+                    
+                    const now = new Date();
+                    const formattedTime = now.toLocaleDateString('id-ID', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    }) + ' ' + now.toLocaleTimeString('id-ID', {
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    });
+                    
+                    localStorage.setItem(DRAFT_TIME_KEY, formattedTime);
+                    showDraftBanner(formattedTime);
+                }
+
+                function loadDraft() {
+                    const reportId = document.getElementById('report_id').value;
+                    if (reportId) return; // Do not load draft when editing an existing report
+
+                    const rawData = localStorage.getItem(DRAFT_KEY);
+                    const savedTime = localStorage.getItem(DRAFT_TIME_KEY);
+
+                    if (rawData && savedTime) {
+                        try {
+                            const data = JSON.parse(rawData);
+                            
+                            if (data.tanggal) document.getElementById('tanggal').value = data.tanggal;
+                            
+                            if (data.shift) {
+                                const radio = document.querySelector(`input[name="shift"][value="${data.shift}"]`);
+                                if (radio) {
+                                    radio.checked = true;
+                                }
+                            }
+                            
+                            if (data.pengerjaan) document.getElementById('pengerjaan').value = data.pengerjaan;
+                            if (data.jenis_produk) document.getElementById('jenis_produk').value = data.jenis_produk;
+                            if (data.produk_yang_dikerjakan) document.getElementById('produk_yang_dikerjakan').value = data.produk_yang_dikerjakan;
+                            if (data.satuan) document.getElementById('satuan').value = data.satuan;
+                            if (data.keterangan) document.getElementById('keterangan').value = data.keterangan;
+                            
+                            // Load results format
+                            if (data.hasil) {
+                                const hasilInput = document.getElementById('hasil');
+                                if (hasilInput) {
+                                    hasilInput.value = data.hasil;
+                                    let cleaned = data.hasil.replace(/\D/g, '');
+                                    if (cleaned) {
+                                        hasilInput.value = parseInt(cleaned, 10).toLocaleString('id-ID');
+                                    }
+                                }
+                            }
+                            
+                            updateRadioStyles();
+                            validateShiftSelection();
+                            showDraftBanner(savedTime);
+                        } catch (e) {
+                            console.error('Failed to restore draft:', e);
+                        }
+                    }
+                }
+
+                function showDraftBanner(timestamp) {
+                    const banner = document.getElementById('draft-alert');
+                    const timestampEl = document.getElementById('draft-timestamp');
+                    if (banner && timestampEl) {
+                        timestampEl.textContent = timestamp;
+                        banner.classList.remove('hidden');
+                    }
+                }
+
+                function hideDraftBanner() {
+                    const banner = document.getElementById('draft-alert');
+                    if (banner) {
+                        banner.classList.add('hidden');
+                    }
+                }
+
+                function clearDraftManual() {
+                    if (confirm('Apakah Anda yakin ingin menghapus draft ini? Form input akan dikosongkan.')) {
+                        localStorage.removeItem(DRAFT_KEY);
+                        localStorage.removeItem(DRAFT_TIME_KEY);
+                        hideDraftBanner();
+                        clearFormFields();
+                        validateShiftSelection();
+                    }
+                }
+
+                // Event delegation or individual attach
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Try to restore draft
+                    loadDraft();
+
+                    // Elements for tracking input
+                    const fields = [
+                        document.getElementById('tanggal'),
+                        document.getElementById('pengerjaan'),
+                        document.getElementById('jenis_produk'),
+                        document.getElementById('produk_yang_dikerjakan'),
+                        document.getElementById('hasil'),
+                        document.getElementById('satuan'),
+                        document.getElementById('keterangan')
+                    ];
+
+                    fields.forEach(field => {
+                        if (field) {
+                            field.addEventListener('input', saveDraft);
+                            field.addEventListener('change', saveDraft);
+                        }
+                    });
+
+                    const shiftRadios = document.querySelectorAll('input[name="shift"]');
+                    shiftRadios.forEach(radio => {
+                        radio.addEventListener('change', saveDraft);
+                    });
+                });
             </script>
             
         @endif
