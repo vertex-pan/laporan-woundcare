@@ -318,6 +318,29 @@ class WoundReportController extends Controller
         return redirect()->back()->with('success', "Operator {$name} berhasil dihapus.");
     }
 
+    public function generateEmergencyPin($id)
+    {
+        if (session('operator_role') !== 'coordinator') {
+            return redirect()->back()->withErrors(['access' => 'Anda tidak memiliki akses.']);
+        }
+
+        $operator = Operator::findOrFail($id);
+        
+        // Generate a 6-digit random PIN
+        $pin = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store in cache for 20 minutes
+        \Illuminate\Support\Facades\Cache::put('emergency_pin_' . $operator->id, $pin, now()->addMinutes(20));
+
+        return redirect()->back()->with('success', "PIN Darurat berhasil dibuat.")
+            ->with('emergency_pin_generated', [
+                'operator_id' => $operator->id,
+                'operator_name' => $operator->name,
+                'pin' => $pin,
+                'expires_at' => now()->addMinutes(20)->format('H:i')
+            ]);
+    }
+
     public function updateMyWhatsapp(Request $request)
     {
         $request->validate([

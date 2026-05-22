@@ -17,11 +17,7 @@ class AuthController extends Controller
 
         $coordinators = Operator::where('role', 'coordinator')->orderBy('name')->get();
         
-        // Only list karyawan that have email for the bypass (or all if none linked yet)
-        $staffs = Operator::where('role', 'karyawan')->whereNotNull('email')->orderBy('name')->get();
-        if ($staffs->isEmpty()) {
-            $staffs = Operator::where('role', 'karyawan')->orderBy('name')->take(20)->get();
-        }
+        $staffs = Operator::where('role', 'karyawan')->orderBy('name')->get();
 
         $googleEnabled = env('GOOGLE_AUTH_ENABLED', false);
 
@@ -192,6 +188,45 @@ class AuthController extends Controller
         \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
 
         return redirect()->route('dashboard')->with('success', 'Berhasil masuk sebagai ' . $operator->name);
+    }
+
+    public function loginWithPin(Request $request)
+    {
+        $request->validate([
+            'operator_id' => 'required|exists:operators,id',
+            'pin' => 'required|string|size:6',
+        ]);
+
+        $operatorId = $request->operator_id;
+        $inputPin = $request->pin;
+
+        // Retrieve pin from cache
+        $cachedPin = \Illuminate\Support\Facades\Cache::get('emergency_pin_' . $operatorId);
+
+        if (!$cachedPin || $cachedPin !== $inputPin) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors('PIN Darurat tidak valid atau telah kadaluarsa. Silakan hubungi Koordinator Anda.');
+        }
+
+        // Pin is valid, log in the operator
+        $operator = Operator::findOrFail($operatorId);
+
+        // Remove the pin from cache immediately to prevent reuse
+        \Illuminate\Support\Facades\Cache::forget('emergency_pin_' . $operatorId);
+
+        session([
+            'operator_id' => $operator->id,
+            'operator_name' => $operator->name,
+            'operator_vendor' => $operator->vendor,
+            'operator_role' => $operator->role,
+            'operator_whatsapp' => $operator->whatsapp,
+        ]);
+
+        // Queue secure remember cookie for 30 days (43200 minutes)
+        \Illuminate\Support\Facades\Cookie::queue('remember_operator_id', $operator->id, 43200);
+
+        return redirect()->route('dashboard')->with('success', 'Berhasil masuk menggunakan PIN Darurat sebagai ' . $operator->name);
     }
 
     public function redirectToGoogle()

@@ -10,6 +10,7 @@ Route::post('/login/phone', [AuthController::class, 'loginByPhone'])->name('logi
 Route::post('/login/magic-link/send', [AuthController::class, 'sendMagicLink'])->name('login.magic-link.send');
 Route::get('/login/verify', [AuthController::class, 'verifyMagicLink'])->name('login.verify');
 Route::post('/login/bypass', [AuthController::class, 'loginBypass'])->name('login.bypass');
+Route::post('/login/emergency-pin', [AuthController::class, 'loginWithPin'])->name('login.emergency-pin');
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -33,4 +34,5 @@ Route::middleware(['operator.auth'])->group(function () {
     Route::post('/operators/{id}/reset-email', [WoundReportController::class, 'resetEmail'])->name('operators.reset-email');
     Route::put('/operators/{id}', [WoundReportController::class, 'updateOperator'])->name('operators.update');
     Route::delete('/operators/{id}', [WoundReportController::class, 'destroyOperator'])->name('operators.destroy');
+    Route::post('/operators/{id}/generate-pin', [WoundReportController::class, 'generateEmergencyPin'])->name('operators.generate-pin');
 });

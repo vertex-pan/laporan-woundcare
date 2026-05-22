@@ -149,6 +149,34 @@
         @endif
         
         <!-- Notifications / Toasts -->
+        @if(session('emergency_pin_generated'))
+        @php $generated = session('emergency_pin_generated'); @endphp
+        <div id="emergencyPinToast" class="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <i data-lucide="key" class="w-6 h-6 animate-bounce"></i>
+                </div>
+                <div class="text-center sm:text-left">
+                    <h4 class="text-sm font-bold text-slate-800 font-outfit">PIN Darurat Berhasil Dibuat!</h4>
+                    <p class="text-xs text-slate-650 mt-1 leading-relaxed">
+                        Berikan PIN berikut kepada <strong class="text-slate-900 font-bold">{{ $generated['operator_name'] }}</strong> untuk login.
+                    </p>
+                    <p class="text-[10px] text-emerald-700 font-semibold mt-1">
+                        *PIN ini hanya berlaku sekali pakai dan akan kadaluarsa otomatis pada pukul <strong class="underline font-bold">{{ $generated['expires_at'] }} WIB</strong> (20 menit dari sekarang).
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="bg-white border-2 border-emerald-400 px-5 py-2.5 rounded-2xl shadow-inner font-mono text-2xl font-black text-emerald-600 tracking-widest select-all cursor-pointer" title="Klik untuk memblok PIN">
+                    {{ $generated['pin'] }}
+                </div>
+                <button onclick="document.getElementById('emergencyPinToast').remove()" class="p-2 hover:bg-emerald-100 rounded-xl text-emerald-700 transition-all shrink-0" title="Tutup">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        @endif
+        
         @if(session('success'))
         <div id="successToast" class="flex items-center justify-between p-4 mb-6 rounded-xl bg-emerald-50 border border-emerald-250 text-emerald-800 shadow-md">
             <div class="flex items-center gap-3">
@@ -667,6 +695,14 @@
                                         </td>
                                         <td class="py-3 px-4 text-right">
                                             <div class="flex items-center justify-end gap-1.5">
+                                                <!-- Generate Emergency PIN Button -->
+                                                <form action="{{ route('operators.generate-pin', $op->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membuatkan PIN Darurat Sementara untuk {{ $op->name }}? PIN ini akan aktif selama 20 menit.');">
+                                                    @csrf
+                                                    <button type="submit" class="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 p-1.5 rounded-lg border border-transparent hover:border-emerald-200 transition-colors" title="Generate PIN Darurat">
+                                                        <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                                                    </button>
+                                                </form>
+
                                                 <!-- Edit Button -->
                                                 <button type="button" onclick="openEditOperatorModal('{{ $op->id }}', '{{ addslashes($op->name) }}', '{{ $op->vendor }}', '{{ $op->role }}', '{{ $op->whatsapp }}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 rounded-lg border border-transparent hover:border-blue-200 transition-colors" title="Edit Operator">
                                                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>

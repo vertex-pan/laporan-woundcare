@@ -100,7 +100,7 @@
             @endif
 
             <!-- Login Options Tabs -->
-            <div class="flex border-b border-slate-100 mb-6">
+            <div id="tab-container" class="flex border-b border-slate-100 mb-6">
                 <button type="button" onclick="switchTab('phone')" id="tab-phone" class="flex-1 pb-3 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-600 focus:outline-none transition-all flex items-center justify-center gap-2">
                     <i data-lucide="phone" class="w-4 h-4"></i>
                     Nomor WhatsApp
@@ -185,6 +185,79 @@
                 </a>
             </div>
 
+            <!-- Emergency PIN Login Form -->
+            <div id="form-pin" class="space-y-4 hidden">
+                <form action="{{ route('login.emergency-pin') }}" method="POST" class="space-y-4">
+                    @csrf
+                    
+                    <div class="space-y-2">
+                        <label for="operator_id" class="text-xs font-bold text-slate-600 block">Pilih Nama Anda <span class="text-rose-500">*</span></label>
+                        
+                        <!-- Vendor Filter Tabs inside PIN Form -->
+                        <div class="flex border border-slate-200 bg-slate-50/50 p-1 rounded-xl gap-1 mb-2 overflow-x-auto scrollbar-none">
+                            <button type="button" onclick="filterVendor('ALL')" id="vfilter-ALL" class="vfilter-btn py-1.5 px-3 text-[10px] font-bold rounded-lg transition-all shrink-0 bg-white text-slate-800 shadow-sm border border-slate-100">
+                                Semua
+                            </button>
+                            @foreach(['AA', 'IPS', 'JMI', 'KWI', 'MJA'] as $vName)
+                                <button type="button" onclick="filterVendor('{{ $vName }}')" id="vfilter-{{ $vName }}" class="vfilter-btn py-1.5 px-3 text-[10px] font-bold rounded-lg transition-all shrink-0 text-slate-550 hover:text-slate-700 hover:bg-slate-100">
+                                    {{ $vName }}
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450 z-10">
+                                <i data-lucide="user" class="w-4.5 h-4.5"></i>
+                            </span>
+                            <select name="operator_id" id="operator_id" required class="pl-10 w-full rounded-xl border border-slate-300 py-3.5 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none cursor-pointer">
+                                <option value="" disabled selected>-- Pilih Nama Karyawan --</option>
+                                @foreach($staffs as $staff)
+                                    <option value="{{ $staff->id }}" data-vendor="{{ $staff->vendor }}" @if(old('operator_id') == $staff->id) selected @endif>
+                                        {{ $staff->name }} ({{ $staff->vendor }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-450">
+                                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="pin" class="text-xs font-bold text-slate-600 block">PIN Darurat 6-Digit <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
+                                <i data-lucide="key" class="w-4.5 h-4.5"></i>
+                            </span>
+                            <input type="text" name="pin" id="pin" required maxlength="6" pattern="[0-9]*" placeholder="Contoh: 123456" class="pl-10 w-full rounded-xl border border-slate-300 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-normal">
+                            *Jika Anda lupa membawa HP, silakan minta PIN Darurat Sementara secara fisik kepada Koordinator Anda di lapangan. PIN berlaku selama 20 menit.
+                        </p>
+                    </div>
+
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-office-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">
+                        <i data-lucide="log-in" class="w-4.5 h-4.5"></i>
+                        <span>Masuk Sistem</span>
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <button type="button" onclick="hidePinForm()" class="text-xs font-semibold text-slate-500 hover:text-primary-650 hover:underline transition-colors flex items-center justify-center gap-1.5 mx-auto">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Kembali ke Login Utama</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Forgot Phone Link -->
+            <div id="forgot-phone-link-container" class="mt-6 pt-4 border-t border-slate-100 text-center">
+                <button type="button" onclick="showPinForm()" class="text-xs font-semibold text-slate-500 hover:text-primary-600 hover:underline transition-colors flex items-center justify-center gap-1.5 mx-auto">
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>Lupa bawa HP? Masuk via PIN Darurat</span>
+                </button>
+            </div>
+
         </div>
     </div>
 
@@ -197,29 +270,111 @@
         // Init Lucide
         lucide.createIcons();
 
-        function switchTab(type) {
-            const tabPhone = document.getElementById('tab-phone');
-            const tabGoogle = document.getElementById('tab-google');
-            const formPhone = document.getElementById('form-phone');
-            const formGoogle = document.getElementById('form-google');
+        // Vendor Option Filtering Logic for Native select
+        let allStaffOptions = [];
 
-            if (type === 'phone') {
-                tabPhone.classList.add('text-primary-600', 'border-primary-600', 'font-bold');
-                tabPhone.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
-                tabGoogle.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
-                tabGoogle.classList.remove('text-primary-600', 'border-primary-600', 'font-bold');
-                
-                formPhone.classList.remove('hidden');
-                formGoogle.classList.add('hidden');
-            } else {
-                tabGoogle.classList.add('text-primary-600', 'border-primary-600', 'font-bold');
-                tabGoogle.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
-                tabPhone.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
-                tabPhone.classList.remove('text-primary-600', 'border-primary-600', 'font-bold');
-                
-                formGoogle.classList.remove('hidden');
-                formPhone.classList.add('hidden');
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectEl = document.getElementById('operator_id');
+            if (selectEl) {
+                const options = selectEl.querySelectorAll('option');
+                options.forEach(opt => {
+                    if (opt.value === '') return;
+                    allStaffOptions.push({
+                        id: opt.value,
+                        name: opt.textContent.trim(),
+                        vendor: opt.getAttribute('data-vendor')
+                    });
+                });
             }
+        });
+
+        function filterVendor(vendor) {
+            const selectEl = document.getElementById('operator_id');
+            if (!selectEl) return;
+
+            // Highlight active vendor filter button
+            const buttons = document.querySelectorAll('.vfilter-btn');
+            buttons.forEach(btn => {
+                if (btn.id === `vfilter-${vendor}`) {
+                    btn.classList.add('bg-white', 'text-slate-800', 'shadow-sm', 'border', 'border-slate-100');
+                    btn.classList.remove('text-slate-550', 'hover:text-slate-700', 'hover:bg-slate-100');
+                } else {
+                    btn.classList.remove('bg-white', 'text-slate-800', 'shadow-sm', 'border', 'border-slate-100');
+                    btn.classList.add('text-slate-550', 'hover:text-slate-700', 'hover:bg-slate-100');
+                }
+            });
+
+            // Save currently selected value to restore it if it's still present in the filtered list
+            const currentSelectedValue = selectEl.value;
+
+            // Clear select
+            selectEl.innerHTML = '<option value="" disabled selected>-- Pilih Nama Karyawan --</option>';
+
+            // Re-populate options
+            const filteredOptions = allStaffOptions.filter(opt => vendor === 'ALL' || opt.vendor === vendor);
+            
+            filteredOptions.forEach(opt => {
+                const newOpt = document.createElement('option');
+                newOpt.value = opt.id;
+                newOpt.textContent = opt.name;
+                newOpt.setAttribute('data-vendor', opt.vendor);
+                if (opt.id === currentSelectedValue) {
+                    newOpt.selected = true;
+                }
+                selectEl.appendChild(newOpt);
+            });
+        }
+
+        let activeTab = 'google';
+
+        function switchTab(type) {
+            activeTab = type;
+            const tabs = {
+                'phone': { btn: document.getElementById('tab-phone'), form: document.getElementById('form-phone') },
+                'google': { btn: document.getElementById('tab-google'), form: document.getElementById('form-google') }
+            };
+
+            Object.keys(tabs).forEach(key => {
+                const item = tabs[key];
+                if (!item.btn || !item.form) return;
+
+                if (key === type) {
+                    item.btn.classList.add('text-primary-600', 'border-primary-600', 'font-bold');
+                    item.btn.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
+                    item.form.classList.remove('hidden');
+                } else {
+                    item.btn.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
+                    item.btn.classList.remove('text-primary-600', 'border-primary-600', 'font-bold');
+                    item.form.classList.add('hidden');
+                }
+            });
+
+            // Make sure PIN form and tabs show correctly
+            document.getElementById('form-pin').classList.add('hidden');
+            document.getElementById('tab-container').classList.remove('hidden');
+            document.getElementById('forgot-phone-link-container').classList.remove('hidden');
+        }
+
+        function showPinForm() {
+            // Hide normal tabs and forgot phone link container
+            document.getElementById('tab-container').classList.add('hidden');
+            document.getElementById('forgot-phone-link-container').classList.add('hidden');
+            
+            // Hide main forms
+            document.getElementById('form-phone').classList.add('hidden');
+            document.getElementById('form-google').classList.add('hidden');
+            
+            // Show PIN form
+            document.getElementById('form-pin').classList.remove('hidden');
+        }
+
+        function hidePinForm() {
+            // Show normal tabs and forgot phone link container
+            document.getElementById('tab-container').classList.remove('hidden');
+            document.getElementById('forgot-phone-link-container').classList.remove('hidden');
+            
+            // Restore active tab
+            switchTab(activeTab);
         }
 
         // Remember phone number logic
@@ -374,8 +529,11 @@
         // Default to Google, but switch to phone tab if there are errors or old input
         const hasErrors = @json($errors->any());
         const hasOldInput = @json(old('whatsapp') !== null);
+        const hasOldPin = @json(old('pin') !== null || old('operator_id') !== null);
 
-        if (hasErrors || hasOldInput) {
+        if (hasOldPin) {
+            showPinForm();
+        } else if (hasErrors || hasOldInput) {
             switchTab('phone');
         } else {
             switchTab('google');
