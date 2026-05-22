@@ -1024,7 +1024,7 @@
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-amber-600">
                                             <i data-lucide="lock" class="w-4 h-4"></i>
                                         </span>
-                                        <input type="text" name="late_bypass_pin" id="late_bypass_pin" placeholder="Masukkan 6-Digit PIN Koordinator" maxlength="6" autocomplete="off" class="pl-10 w-full rounded-lg border border-amber-250 py-2.5 px-3.5 text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-550 transition-all font-mono text-center tracking-widest font-bold cursor-not-allowed opacity-60" disabled>
+                                        <input type="text" name="late_bypass_pin" id="late_bypass_pin" placeholder="Masukkan 6-Digit PIN Koordinator" maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="off" class="pl-10 w-full rounded-lg border border-amber-250 py-2.5 px-3.5 text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-550 transition-all font-mono text-center tracking-widest font-bold cursor-not-allowed opacity-60" disabled>
                                     </div>
                                 </div>
                             </div>

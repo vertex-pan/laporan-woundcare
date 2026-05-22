@@ -229,7 +229,7 @@
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-450">
                                 <i data-lucide="key" class="w-4.5 h-4.5"></i>
                             </span>
-                            <input type="text" name="pin" id="pin" required maxlength="6" pattern="[0-9]*" placeholder="Contoh: 123456" class="pl-10 w-full rounded-xl border border-slate-300 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            <input type="text" name="pin" id="pin" required maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Contoh: 123456" class="pl-10 w-full rounded-xl border border-slate-300 py-3 px-4 text-sm bg-white text-slate-800 placeholder-slate-400 font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                         </div>
                         <p class="text-[10px] text-slate-500 leading-normal">
                             *Jika Anda lupa membawa HP, silakan minta PIN Darurat Sementara secara fisik kepada Koordinator Anda di lapangan. PIN berlaku selama 20 menit.
