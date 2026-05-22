@@ -440,6 +440,9 @@ class WoundReportController extends Controller
             // Excel Export using PhpSpreadsheet
             $spreadsheet = new Spreadsheet();
             
+            // Set global font family and size for a crisp corporate look
+            $spreadsheet->getDefaultStyle()->getFont()->setName('Arial')->setSize(10);
+            
             $colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
             
             // Indonesian month names mapping
@@ -482,8 +485,14 @@ class WoundReportController extends Controller
                         $sheet = $spreadsheet->createSheet();
                     }
                     
-                    // Set title (max 31 characters, and replace any invalid characters if any)
+                    // Set title (max 31 characters)
                     $sheet->setTitle(substr($monthYear, 0, 31));
+                    
+                    // Freeze first row so header remains visible on scroll
+                    $sheet->freezePane('A2');
+                    
+                    // Set header row height for breathing room
+                    $sheet->getRowDimension(1)->setRowHeight(28);
                     
                     // Write header
                     foreach ($columns as $colIndex => $colName) {
@@ -494,6 +503,9 @@ class WoundReportController extends Controller
                     $row = 2;
                     foreach ($monthReports as $report) {
                         $email = $report->operatorRelation ? $report->operatorRelation->email : '';
+                        
+                        // Set row height for elegant spacing
+                        $sheet->getRowDimension($row)->setRowHeight(20);
                         
                         $sheet->setCellValue('A' . $row, $report->created_at->format('d/m/Y H:i:s'));
                         $sheet->setCellValue('B' . $row, $email);
@@ -509,6 +521,26 @@ class WoundReportController extends Controller
                         $sheet->setCellValue('K' . $row, $report->satuan);
                         $sheet->setCellValue('L' . $row, $report->keterangan);
                         $sheet->setCellValue('M' . $row, ucfirst($report->status));
+                        
+                        // Zebra Striping (ultra soft purple-gray for even rows on columns A-L)
+                        if ($row % 2 === 0) {
+                            $sheet->getStyle('A' . $row . ':L' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFFBF9FC');
+                        }
+                        
+                        // Status styling with elegant pastel badges (Column M)
+                        $statusCell = 'M' . $row;
+                        $statusVal = strtolower($report->status);
+                        if ($statusVal === 'approved') {
+                            $sheet->getStyle($statusCell)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFE2F0D9');
+                            $sheet->getStyle($statusCell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF385723'))->setBold(true);
+                        } elseif ($statusVal === 'pending') {
+                            $sheet->getStyle($statusCell)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFFCE4D6');
+                            $sheet->getStyle($statusCell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFC65911'))->setBold(true);
+                        } elseif ($statusVal === 'rejected') {
+                            $sheet->getStyle($statusCell)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFF8CBAD');
+                            $sheet->getStyle($statusCell)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFC00000'))->setBold(true);
+                        }
+                        
                         $row++;
                     }
                     
@@ -522,12 +554,26 @@ class WoundReportController extends Controller
                     $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
                     $sheet->getStyle($headerRange)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF4C1F7A');
                     
-                    // Apply thin borders and grid gridlines
+                    // Center align header horizontally and vertically
+                    $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                    
+                    // Style borders, grid gridlines, and alignments
                     if ($row > 2) {
+                        // Apply thin borders
                         $sheet->getStyle('A1:M' . ($row - 1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setARGB('FFD3D3D3');
                         
                         // Format volume column (Hasil) with thousands separator
                         $sheet->getStyle('J2:J' . ($row - 1))->getNumberFormat()->setFormatCode('#,##0');
+                        
+                        // Center-align columns: C (Tanggal), D (Shift), F (Vendor), K (Satuan), M (Status)
+                        $sheet->getStyle('C2:C' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('D2:D' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('F2:F' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('K2:K' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('M2:M' . ($row - 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        
+                        // Vertically align all data rows to center
+                        $sheet->getStyle('A2:M' . ($row - 1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                     }
                     
                     $sheetIndex++;
